@@ -23,6 +23,7 @@ lazy val root = (project in file("."))
     libraryDependencies += "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % "2.10.3",
     libraryDependencies += "junit" % "junit" % "4.13.2",
     libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % Test exclude("junit", "junit-dep"),
+    libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.6.3" % Test,
     LessKeys.compress := true,
     javacOptions ++= Seq(
       "-Xlint:unchecked",

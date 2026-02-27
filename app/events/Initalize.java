@@ -10,6 +10,8 @@ import structures.basic.Unit;
 import utils.BasicObjectBuilders;
 import utils.StaticConfFiles;
 
+import structures.Board;
+
 /**
  * Indicates that both the core game loop in the browser is starting, meaning
  * that it is ready to recieve commands from the back-end.
@@ -31,6 +33,15 @@ public class Initalize implements EventProcessor{
 
 		gameState.something = true;
 
+		Board board = new Board();
+		gameState.board = board;
+
+		for (int x = 1; x <= Board.BOARD_WIDTH; x++) {
+			for (int y = 1; y <= Board.BOARD_HEIGHT; y++) {
+				BasicCommands.drawTile(out, board.getTile(x, y), 0);
+			}
+		}
+
 		initAvatar(out, gameState);
 
 
@@ -38,8 +49,11 @@ public class Initalize implements EventProcessor{
 
 	public void initAvatar(ActorRef out, GameState gameState){
 //	set the initial avatar position
-		Tile tile1 = BasicObjectBuilders.loadTile(1, 2);
-		Tile tile2 = BasicObjectBuilders.loadTile(7, 2);
+		Tile tile1 = gameState.board.getTile(1, 3);
+		Tile tile2 = gameState.board.getTile(9, 3);
+
+		gameState.player1AvatarTile = tile1;
+		gameState.player2AvatarTile = tile2;
 
 		//create humanAvatar and aiAvatar unit
 		Unit humanAvatar = BasicObjectBuilders.loadUnit(StaticConfFiles.humanAvatar, 0, Unit.class);

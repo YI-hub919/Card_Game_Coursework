@@ -207,8 +207,8 @@ public class BasicObjectBuilders {
 	 */
 	public static Tile loadTile(int x, int y) {
 		int gridmargin = 5;
-		int gridTopLeftx = 410;
-		int gridTopLefty = 280;
+		int gridTopLeftx = 290;// Grid top-left pixel offset (adjusted to match gameplay layout)
+		int gridTopLefty = 160;
 
 		Tile tile = Tile.constructTile(StaticConfFiles.tileConf);
 		tile.setXpos((tile.getWidth()*x)+(gridmargin*x)+gridTopLeftx);

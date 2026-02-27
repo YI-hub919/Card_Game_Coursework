@@ -39,6 +39,7 @@ public class Initalize implements EventProcessor{
 		for (int x = 1; x <= Board.BOARD_WIDTH; x++) {
 			for (int y = 1; y <= Board.BOARD_HEIGHT; y++) {
 				BasicCommands.drawTile(out, board.getTile(x, y), 0);
+				try { Thread.sleep(50); } catch (InterruptedException e) { e.printStackTrace(); }//simple "laying tiles" effect
 			}
 		}
 

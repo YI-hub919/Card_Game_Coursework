@@ -26,4 +26,6 @@ public class GameState {
 	public Tile player2AvatarTile;
 
 	public Tile selectedTile;
+
+	public Unit selectedUnit;
 }

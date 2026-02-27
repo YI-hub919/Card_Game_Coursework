@@ -6,6 +6,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import akka.actor.ActorRef;
 import structures.GameState;
 
+import commands.BasicCommands;
+
+import structures.basic.Tile;
+
 /**
  * Indicates that the user has clicked an object on the game canvas, in this case a tile.
  * The event returns the x (horizontal) and y (vertical) indices of the tile that was
@@ -27,11 +31,16 @@ public class TileClicked implements EventProcessor{
 
 		int tilex = message.get("tilex").asInt();
 		int tiley = message.get("tiley").asInt();
-		
-		if (gameState.something == true) {
-			// do some logic
+
+		Tile clickedTile = gameState.board.getTile(tilex, tiley);
+
+		if (gameState.selectedTile != null) {
+			BasicCommands.drawTile(out, gameState.selectedTile, 0);
 		}
-		
+
+		BasicCommands.drawTile(out, clickedTile, 1);
+
+		gameState.selectedTile = clickedTile;
 	}
 
 }

@@ -1,5 +1,6 @@
 package structures;
 import structures.basic.Unit;
+import structures.basic.Tile;
 /**
  * This class can be used to hold information about the on-going game.
  * Its created with the GameActor.
@@ -23,4 +24,6 @@ public class GameState {
 	public Tile player1AvatarTile;
 
 	public Tile player2AvatarTile;
+
+	public Tile selectedTile;
 }

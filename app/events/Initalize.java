@@ -27,15 +27,15 @@ public class Initalize implements EventProcessor{
 
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
-		// hello this is a change
 
 		gameState.gameInitalised = true;
 
 		gameState.something = true;
 
+		// Create and store the game board (9x5 grid)
 		Board board = new Board();
 		gameState.board = board;
-
+		// Render all tiles on the board
 		for (int x = 1; x <= Board.BOARD_WIDTH; x++) {
 			for (int y = 1; y <= Board.BOARD_HEIGHT; y++) {
 				BasicCommands.drawTile(out, board.getTile(x, y), 0);
@@ -49,9 +49,10 @@ public class Initalize implements EventProcessor{
 
 	public void initAvatar(ActorRef out, GameState gameState){
 //	set the initial avatar position
+		// Get starting tiles for both avatars
 		Tile tile1 = gameState.board.getTile(1, 3);
 		Tile tile2 = gameState.board.getTile(9, 3);
-
+		// Store current tile references in GameState
 		gameState.player1AvatarTile = tile1;
 		gameState.player2AvatarTile = tile2;
 
@@ -76,7 +77,7 @@ public class Initalize implements EventProcessor{
 		aiAvatar.setRobustness(initial_robustness);
 		aiAvatar.setPositionByTile(tile2);
 		BasicCommands.drawUnit(out, aiAvatar, tile2);
-		//delay
+
 		new Thread(() -> {
 			try {
 				// 500ms delay

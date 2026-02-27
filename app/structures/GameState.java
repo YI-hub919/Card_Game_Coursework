@@ -7,12 +7,15 @@ import structures.basic.Unit;
  * @author Dr. Richard McCreadie
  *
  */
+
 public class GameState {
 
-	
+
 	public boolean gameInitalised = false;
 	
 	public boolean something = false;
+
+	public boolean isHumanTurn = true; // true = human's turn, false = AI's turn
 
 	public Unit player1Avatar; //store the 1st player information
 

@@ -118,7 +118,7 @@ public class Initalize implements EventProcessor {
 
         // Human Draw 3 starting cards
         for (int i = 0; i < 3; i++) {
-            Player.drawCard(out, humanPlayer);
+            Player.drawCard(out, humanPlayer, true);
         }
 
         try { Thread.sleep(5000); } catch (InterruptedException e) { e.printStackTrace(); }
@@ -132,7 +132,7 @@ public class Initalize implements EventProcessor {
 
         // Human Draw 3 starting cards
         for (int i = 0; i < 3; i++) {
-            Player.drawCard(out, humanPlayer);
+            Player.drawCard(out, humanPlayer, false);
         }
 
         try { Thread.sleep(2500); } catch (InterruptedException e) { e.printStackTrace(); }

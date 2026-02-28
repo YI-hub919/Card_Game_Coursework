@@ -14,8 +14,10 @@ import java.util.List;
  */
 public class Player {
 
-	int health;
-	int mana;
+    static final int MAX_HEALTH = 20;
+
+	private int health;
+	private int mana;
     int attack;
     int robustness;
     int nextCardNum = 0;
@@ -39,6 +41,9 @@ public class Player {
 		return health;
 	}
 	public void setHealth(int health) {
+        if (health > MAX_HEALTH) {
+            health = MAX_HEALTH;
+        }
         if (health < 0) {
             health = 0;
         }
@@ -59,7 +64,7 @@ public class Player {
         return cardInHand;
     }
 
-    public static void drawCard(ActorRef out, Player player) {
+    public static void drawCard(ActorRef out, Player player, boolean isHumanPayer) {
         if (player.nextCardNum >= player.cardDeck.size()) {
             System.out.println("No more cards in deck");
             return;
@@ -75,7 +80,10 @@ public class Player {
 
         int cardPosition = player.cardInHand.size();
 
-        BasicCommands.drawCard(out, newDrawnCard, cardPosition, 0);
+        if (isHumanPayer) {
+            BasicCommands.drawCard(out, newDrawnCard, cardPosition, 0);
+        }
+
         try { Thread.sleep(100); } catch (InterruptedException e) { e.printStackTrace(); }
 
         player.cardInHand.add(newDrawnCard);

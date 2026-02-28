@@ -81,7 +81,7 @@ public class PlayerTest {
     public void testDrawCardAddsToHand() {
         Player player = new Player(20, 0);
         player.setCardDeck(OrderedCardLoader.getPlayer1Cards(2));
-        Player.drawCard(null, player);
+        Player.drawCard(null, player, true);
         assertEquals(1, player.getCardInHand().size());
     }
 
@@ -90,7 +90,7 @@ public class PlayerTest {
         Player player = new Player(20, 0);
         player.setCardDeck(OrderedCardLoader.getPlayer1Cards(2));
         for (int i = 0; i < 3; i++) {
-            Player.drawCard(null, player);
+            Player.drawCard(null, player, true);
         }
         assertEquals(3, player.getCardInHand().size());
     }
@@ -99,7 +99,7 @@ public class PlayerTest {
     public void testDrawCardFromEmptyDeck() {
         Player player = new Player(20, 0);
         player.setCardDeck(new ArrayList<>());
-        Player.drawCard(null, player);
+        Player.drawCard(null, player, true);
         assertEquals(0, player.getCardInHand().size());
     }
 
@@ -109,7 +109,7 @@ public class PlayerTest {
         player.setCardDeck(OrderedCardLoader.getPlayer1Cards(2));
 
         for (int i = 0; i < 8; i++) {
-            Player.drawCard(null, player);
+            Player.drawCard(null, player, true);
         }
         assertTrue("Hand size should not exceed 6", player.getCardInHand().size() == 6);
     }

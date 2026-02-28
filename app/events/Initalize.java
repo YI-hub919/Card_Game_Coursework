@@ -50,8 +50,8 @@ public class Initalize implements EventProcessor {
         try { Thread.sleep(300); } catch (InterruptedException e) { e.printStackTrace(); }
 
         // Create avatars and place them on starting tiles
-        Tile tile1 = gameState.board.getTile(1, 3);
-        Tile tile2 = gameState.board.getTile(9, 3);
+        Tile tile1 = gameState.board.getTile(2, 3);
+        Tile tile2 = gameState.board.getTile(8, 3);
 
         gameState.player1AvatarTile = tile1;
         gameState.player2AvatarTile = tile2;
@@ -116,22 +116,27 @@ public class Initalize implements EventProcessor {
         humanPlayer.setMana(roundMana);
         BasicCommands.setPlayer1Mana(out, gameState.player1);
 
-        // Draw 3 starting cards
+        // Human Draw 3 starting cards
         for (int i = 0; i < 3; i++) {
             Player.drawCard(out, humanPlayer);
         }
 
         try { Thread.sleep(5000); } catch (InterruptedException e) { e.printStackTrace(); }
-
         humanPlayer.setMana(0);
         BasicCommands.setPlayer1Mana(out, gameState.player1);
         try { Thread.sleep(2000); } catch (InterruptedException e) { e.printStackTrace(); }
 
-        BasicCommands.addPlayer2Notification(out, "AI Player Round 1", 2);
+        BasicCommands.addPlayer2Notification(out, String.format("AI Player Round %d", roundNum), 2);
         aiPlayer.setMana(roundMana);
         BasicCommands.setPlayer2Mana(out, gameState.player2);
+
+        // Human Draw 3 starting cards
+        for (int i = 0; i < 3; i++) {
+            Player.drawCard(out, humanPlayer);
+        }
+
         try { Thread.sleep(2500); } catch (InterruptedException e) { e.printStackTrace(); }
-        aiPlayer.setMana(roundMana);
+        aiPlayer.setMana(0);
         BasicCommands.setPlayer2Mana(out, gameState.player2);
         try { Thread.sleep(2000); } catch (InterruptedException e) { e.printStackTrace(); }
     }

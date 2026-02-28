@@ -1,11 +1,11 @@
 package structures;
 
-import structures.basic.Card;
 import structures.basic.Player;
 import structures.basic.Tile;
 
 import java.util.ArrayList;
-import java.util.List;
+import structures.basic.Unit;
+
 
 /**
  * This class can be used to hold information about the on-going game.
@@ -18,16 +18,28 @@ public class GameState {
 
     public ArrayList<Tile> boardTile = new ArrayList<>();
 
-	public boolean gameInitalised = false;
-	
-	public boolean something = false;
+    public boolean gameInitalised = false;
+
+    public boolean something = false;
 
     private int rounds = 0;
 
     public Player player1 = new Player();
     public Player player2 = new Player();
 
+    public Unit player1Avatar; //store the 1st player information
 
+    public Unit player2Avatar;	//store 2ed player information
+
+    public Board board;
+
+    public Tile player1AvatarTile;
+
+    public Tile player2AvatarTile;
+
+    public Tile selectedTile;
+
+    public Unit selectedUnit;
 
     public void nextRounds() {
         rounds++;
@@ -44,8 +56,5 @@ public class GameState {
         }
         return mana;
     }
-
-
-
-
 }
+

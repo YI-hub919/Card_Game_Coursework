@@ -16,7 +16,8 @@ public class Player {
 
 	int health;
 	int mana;
-
+    int attack;
+    int robustness;
     int nextCardNum = 0;
 
     private List<Card> cardDeck = new ArrayList<>();
@@ -26,6 +27,8 @@ public class Player {
 		super();
 		this.health = 20;
 		this.mana = 0;
+		this.attack = 2;
+		this.robustness = 0;
 	}
 	public Player(int health, int mana) {
 		super();
@@ -77,5 +80,9 @@ public class Player {
 
         player.cardInHand.add(newDrawnCard);
     }
-	
+
+	public int getAttack(){return attack;}
+	public int getRobustness(){return robustness;}
+	public void setAttack(int attack) { this.attack = attack;}
+	public void setRobustness(int robustness) {this.robustness = robustness;}
 }

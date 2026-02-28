@@ -391,6 +391,19 @@ public class BasicCommands {
 			e.printStackTrace();
 		}
 	}
+
+    public static void addPlayer2Notification(ActorRef out, String text, int displayTimeSeconds) {
+        try {
+            ObjectNode returnMessage = Json.newObject();
+            returnMessage.put("messagetype", "addPlayer2Notification");
+            returnMessage.put("text", text);
+            returnMessage.put("seconds", displayTimeSeconds);
+            if (altTell!=null) altTell.tell(returnMessage);
+            else out.tell(returnMessage, out);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 	
 	/**
 	 * Plays a projectile fire animation between two tiles

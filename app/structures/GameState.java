@@ -1,5 +1,12 @@
 package structures;
+
+import structures.basic.Player;
+import structures.basic.Tile;
+
+import java.util.ArrayList;
 import structures.basic.Unit;
+
+
 /**
  * This class can be used to hold information about the on-going game.
  * Its created with the GameActor.
@@ -10,14 +17,47 @@ import structures.basic.Unit;
 
 public class GameState {
 
+    public ArrayList<Tile> boardTile = new ArrayList<>();
 
-	public boolean gameInitalised = false;
-	
-	public boolean something = false;
+    public boolean gameInitalised = false;
 
-	public boolean isHumanTurn = true; // true = human's turn, false = AI's turn
+    public boolean something = false;
 
-	public Unit player1Avatar; //store the 1st player information
+    private int rounds = 0;
 
-	public Unit player2Avatar;	//store 2ed player information
+    public Player player1 = new Player();
+    public Player player2 = new Player();
+  
+    public boolean isHumanTurn = true; // true = human's turn, false = AI's turn
+
+    public Unit player1Avatar; //store the 1st player information
+
+    public Unit player2Avatar;	//store 2ed player information
+
+    public Board board;
+
+    public Tile player1AvatarTile;
+
+    public Tile player2AvatarTile;
+
+    public Tile selectedTile;
+
+    public Unit selectedUnit;
+
+    public void nextRounds() {
+        rounds++;
+    }
+
+    public int getRounds() {
+        return rounds;
+    }
+
+    public int getManaCapacity() {
+        int mana = rounds + 1;
+        if (mana > 9) {
+            mana = 9;
+        }
+        return mana;
+    }
 }
+

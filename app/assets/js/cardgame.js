@@ -861,14 +861,14 @@ function addPlayer2Notification(message) {
 		// we need to create a new notification
 		
 		player2Notification = g.sprite("assets/game/extra/ui/tooltip_right@2x.png");
-    	player2Notification.setPosition(320, 100);
+    	player2Notification.setPosition(800, 100);
     	player2Notification.width = 800;
     	player2Notification.height = 150;
 		player2Notification.countdown = message.seconds*60;
 		g.stage.addChild(player2Notification);
 		
 		player2NotificationText = new PIXI.Text(message.text, { font: '35px Roboto', fill: 'white', align: 'center' });
-		player2NotificationText.position.x = 460;
+		player2NotificationText.position.x = 940;
 		player2NotificationText.position.y = 150;
 		g.stage.addChild(player2NotificationText);
 	} else {

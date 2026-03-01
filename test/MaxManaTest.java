@@ -15,7 +15,6 @@ public class MaxManaTest {
                 expectedMaxMana = 9;
             }
             int actualMaxMana = gameState.getManaCapacity();
-
             assertEquals("actualMaxMana is round+1 when round between 1-8 and actualMaxMana is 9 when round>9", expectedMaxMana, actualMaxMana);
         }
 

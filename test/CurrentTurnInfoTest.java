@@ -1,3 +1,4 @@
+import commands.CheckMessageIsNotNullOnTell;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -7,39 +8,51 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import commands.BasicCommands;
 import events.EndTurnClicked;
 import structures.GameState;
+import commands.CheckMessageIsNotNullOnTell;
 
 public class CurrentTurnInfoTest {
 
     @Test
     public void testCurrentTurnInfoAndManaAfterEndTurn() {
+
         // Make BasicCommands safe in unit tests
+        BasicCommands.altTell = new CheckMessageIsNotNullOnTell();
 
         GameState gameState = new GameState();
         EndTurnClicked handler = new EndTurnClicked();
 
-        // Current turn info: start as human's turn
+        // Start as human's turn
         gameState.isHumanTurn = true;
 
-        // If your GameState already initialises these in dev, these should exist
-        assertNotNull("player1 should exist in GameState", gameState.player1);
-        assertNotNull("player2 should exist in GameState", gameState.player2);
+        // Ensure players exist
+        assertNotNull("player1 should exist", gameState.player1);
+        assertNotNull("player2 should exist", gameState.player2);
 
-        // Set both mana to known values first (so we can verify update)
+        // Reset mana to known state
         gameState.player1.setMana(0);
         gameState.player2.setMana(0);
 
-        // Build message for EndTurnClicked
+        // Build end turn message
         ObjectNode message = new ObjectMapper().createObjectNode();
         message.put("messageType", "endTurnClicked");
 
-        // Trigger end turn: should switch to opponent
+        // Trigger end turn
         handler.processEvent(null, gameState, message);
 
-        // Now current turn belongs to opponent
-        assertFalse("After EndTurnClicked, it should be opponent's turn", gameState.isHumanTurn);
+        // Turn should switch
+        assertFalse("Turn should switch to opponent", gameState.isHumanTurn);
 
-        // Mana "highlight" in backend meaning: current player's mana is updated to current capacity
+        // Mana capacity after switching
         int expectedMana = gameState.getManaCapacity();
-        assertEquals("Opponent mana should update to mana capacity", expectedMana, gameState.player2.getMana());
+
+        // Opponent should now have full mana
+        assertEquals("Opponent mana should equal capacity",
+                expectedMana,
+                gameState.player2.getMana());
+
+        // Previous player should be reset to 0
+        assertEquals("Previous player mana should be 0",
+                0,
+                gameState.player1.getMana());
     }
 }

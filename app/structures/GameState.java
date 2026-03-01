@@ -51,13 +51,16 @@ public class GameState {
     public int getRounds() {
         return rounds;
     }
+    public void setRounds(int round) {
+        rounds = round;
+    }
 
     public int getManaCapacity() {
-        int mana = rounds + 1;
-        if (mana > 9) {
-            mana = 9;
+        int maxmana = rounds + 1;
+        if (maxmana > 9) {
+            maxmana = 9;
         }
-        return mana;
+        return maxmana;
     }
 }
 

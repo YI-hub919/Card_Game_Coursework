@@ -51,16 +51,18 @@ public class Heartbeat implements EventProcessor{
 
 		if (gameState.isPlayer1Turn) {
 			gameState.player1.setMana(mana);
-			BasicCommands.setPlayer1Mana(out, gameState.player1);
+
+			if (out != null) {
+				BasicCommands.setPlayer1Mana(out, gameState.player1);
+				BasicCommands.addPlayer1Notification(out, "Your Turn", 2);
+			}
 		} else {
 			gameState.player2.setMana(mana);
-			BasicCommands.setPlayer2Mana(out, gameState.player2);
-		}
 
-		if (gameState.isPlayer1Turn) {
-			BasicCommands.addPlayer1Notification(out, "Your Turn", 2);
-		} else {
-			BasicCommands.addPlayer1Notification(out, "Enemy Turn", 2);
+			if (out != null) {
+				BasicCommands.setPlayer2Mana(out, gameState.player2);
+				BasicCommands.addPlayer1Notification(out, "Enemy Turn", 2);
+			}
 		}
 	}
 

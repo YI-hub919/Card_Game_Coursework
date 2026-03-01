@@ -78,7 +78,7 @@ public class Player {
             return;
         }
 
-        int cardPosition = player.cardInHand.size();
+        int cardPosition = player.cardInHand.size() + 1;
 
         if (isHumanPayer) {
             BasicCommands.drawCard(out, newDrawnCard, cardPosition, 0);

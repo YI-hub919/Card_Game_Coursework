@@ -1,7 +1,7 @@
 import org.junit.Test;
 import structures.GameState;
 import static org.junit.Assert.assertEquals;
-
+//it is a test for mana capacity, mana capacity is round+1 when round between 1-8 and mana capacity is 9 when round>9
 public class MaxManaTest {
     @Test
     public void testMaxMana() {

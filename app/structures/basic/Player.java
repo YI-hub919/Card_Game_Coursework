@@ -4,6 +4,7 @@ import akka.actor.ActorRef;
 import commands.BasicCommands;
 import java.util.ArrayList;
 import java.util.List;
+import structures.GameState;
 
 /**
  * A basic representation of of the Player. A player
@@ -18,8 +19,8 @@ public class Player {
 
 	private int health;
 	private int mana;
-    int attack;
-    int robustness;
+    private int attack;
+    private int robustness;
     int nextCardNum = 0;
 
     private List<Card> cardDeck = new ArrayList<>();
@@ -55,6 +56,7 @@ public class Player {
 	public void setMana(int mana) {
 		this.mana = mana;
 	}
+
 
     public void setCardDeck(List<Card> cards) {
         cardDeck = cards;

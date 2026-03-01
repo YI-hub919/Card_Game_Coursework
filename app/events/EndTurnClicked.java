@@ -20,7 +20,11 @@ public class EndTurnClicked implements EventProcessor{
 
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
-		
+		// Mark that end turn has been requested
+		gameState.endTurnRequested = true;
+
+		// Set phase to pending
+		gameState.phase = GameState.TurnPhase.END_TURN_PENDING;
 	}
 
 }

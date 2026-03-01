@@ -56,5 +56,21 @@ public class GameState {
         }
         return mana;
     }
+
+    // Turn control variables
+
+    public boolean endTurnRequested = false;  // End turn button clicked
+
+    public int movingUnitsCount = 0;          // Units currently moving
+
+    public boolean isPlayer1Turn = true;      // True if it's Player 1's turn
+
+    public enum TurnPhase {
+        HUMAN_TURN,
+        END_TURN_PENDING,
+        AI_TURN
+    }
+
+    public TurnPhase phase = TurnPhase.HUMAN_TURN;  // Current turn phase
 }
 

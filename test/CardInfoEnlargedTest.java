@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import akka.actor.ActorRef;
 import play.libs.Json;
 import structures.basic.Card;
+import demo.CommandDemo;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -36,38 +37,6 @@ public class CardInfoEnlargedTest {
         }
     }
 
-    @SuppressWarnings({"deprecation"})
-    public static void drawCard(ActorRef out, Card card, int position, int mode) {
-        try {
-            ObjectNode returnMessage = Json.newObject();
-            returnMessage.put("messagetype", "drawCard");
-
-            ObjectNode cardNode = Json.newObject();
-            if (card != null) {
-                cardNode.put("cardId", card.getCardId() != null ? card.getCardId() : "N/A");
-                cardNode.put("name", card.getName() != null ? card.getName() : "N/A");
-                cardNode.put("manaCost", card.getManaCost());
-                cardNode.put("type", card.getType() != null ? card.getType().name() : "N/A");
-                if (card.getType() == Card.CardType.CREATURE) {
-                    cardNode.put("attack", card.getAttack());
-                    cardNode.put("health", card.getHealth());
-                }
-                cardNode.put("description", card.getDescription() != null ? card.getDescription() : "No description");
-            }
-            returnMessage.set("card", cardNode);
-            
-            returnMessage.put("position", position);
-            returnMessage.put("mode", mode);
-            if (altTell != null) altTell.tell(returnMessage);
-            else if (out != null) {
-                out.tell(returnMessage, out);
-            }
-        } catch (Exception e) {
-            System.err.println("Failed to send drawCard message: " + e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
     /**
      * Core function: Get card info + send enlarged display to UI
      */
@@ -90,7 +59,7 @@ public class CardInfoEnlargedTest {
         enlargedInfo.append("Description: ").append(card.getDescription() != null ? card.getDescription() : "No description");
 
         addPlayer1Notification(out, enlargedInfo.toString(), 5);
-        drawCard(out, card, 0, 1);
+        CommandDemo.drawCard(out, card, 0, 1);
     }
 
     @AfterEach

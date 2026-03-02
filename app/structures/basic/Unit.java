@@ -167,16 +167,16 @@ public class Unit {
 		position = new Position(tile.getXpos(),tile.getYpos(),tile.getTilex(),tile.getTiley());
 	}
 
-	public boolean getHasAttacked() {
-        return hasAttacked;
+	public boolean getNotHasAttacked() {
+        return !hasAttacked;
 	}
 
 	public void setHasAttacked(boolean hasAttacked) {
 		this.hasAttacked = hasAttacked;
 	}
 
-	public boolean getHasMoved() {
-		return hasMoved;
+	public boolean getNotHasMoved() {
+		return !hasMoved;
 	}
 
 	public void setHasMoved(boolean hasMoved) {

@@ -9,7 +9,6 @@ import structures.GameState;
 import structures.basic.Avatar;
 import structures.basic.Player;
 import structures.basic.Tile;
-import structures.basic.Unit;
 import utils.BasicObjectBuilders;
 import utils.OrderedCardLoader;
 import utils.StaticConfFiles;
@@ -30,7 +29,7 @@ public class Initalize implements EventProcessor {
     @Override
     public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 
-        gameState.gameInitalised = true;
+        gameState.gameInitialised = true;
         gameState.something = true;
 
         // Create and store the game board (9x5 grid) using Board (dev style)

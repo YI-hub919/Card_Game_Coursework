@@ -15,6 +15,8 @@ import structures.basic.Position;
 import utils.BasicObjectBuilders;
 import utils.StaticConfFiles;
 
+import structures.basic.EffectAnimation;
+
 /**
  * Indicates that the user has clicked an object on the game canvas, in this case a tile.
  * The event returns the x (horizontal) and y (vertical) indices of the tile that was
@@ -61,6 +63,12 @@ public class TileClicked implements EventProcessor{
 				return;
 			}
 
+			if (!canSummonHere(gameState, tilex)) {
+				BasicCommands.addPlayer1Notification(out, "Cannot summon here", 2);
+				gameState.selectedHandCard = -1;
+				return;
+			}
+
 			// Cannot summon onto an occupied tile
 			if (isTileOccupied(gameState, tilex, tiley)) {
 				BasicCommands.addPlayer1Notification(out, "Tile is occupied", 2);
@@ -79,6 +87,11 @@ public class TileClicked implements EventProcessor{
 			// spend mana
 			gameState.player1.setMana(gameState.player1.getMana() - card.getManacost());
 			BasicCommands.setPlayer1Mana(out, gameState.player1);
+
+			EffectAnimation summonFX = BasicObjectBuilders.loadEffect(StaticConfFiles.f1_summon);
+			if (summonFX != null) {
+				BasicCommands.playEffectAnimation(out, summonFX, tile);
+			}
 
 			// place + draw
 			unit.setPositionByTile(tile);
@@ -160,4 +173,11 @@ public class TileClicked implements EventProcessor{
 		return false;
 	}
 
+	private boolean canSummonHere(GameState gs, int tilex) {
+		if (gs.isPlayer1Turn) {
+			return tilex <= 4;
+		} else {
+			return tilex >= 6;
+		}
+	}
 }

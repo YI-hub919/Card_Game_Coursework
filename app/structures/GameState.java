@@ -30,7 +30,7 @@ public class GameState {
 
     public Unit player1Avatar; //store the 1st player information
 
-    public Unit player2Avatar;    //store 2ed player information
+    public Unit player2Avatar;	//store 2ed player information
 
     public Board board;
 
@@ -49,7 +49,6 @@ public class GameState {
     public int getRounds() {
         return rounds;
     }
-
     public void setRounds(int round) {
         rounds = round;
     }
@@ -63,9 +62,10 @@ public class GameState {
     }
 
     // Turn control variables
+
     private boolean endTurnRequested = false;  // End turn button clicked
-    public int movingUnitsCount = 0;
-    public boolean isPlayer1Turn = true;
+
+    public boolean isPlayer1Turn = true;      // True if it's Player 1's turn
 
     public enum TurnPhase {
         HUMAN_TURN,
@@ -75,6 +75,7 @@ public class GameState {
 
     public TurnPhase phase = TurnPhase.HUMAN_TURN;
 
+    // End turn flag should only be written via these methods
     public void requestEndTurn() {
         this.endTurnRequested = true;
     }

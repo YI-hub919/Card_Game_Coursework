@@ -24,7 +24,7 @@ public class Heartbeat implements EventProcessor{
 
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
-		if (gameState.isEndTurnRequested() && gameState.movingUnitsCount == 0) {
+		if (gameState.isEndTurnRequested()) {
 			finalizeTurn(out, gameState);
 		}
 	}

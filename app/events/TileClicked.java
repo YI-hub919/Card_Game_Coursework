@@ -12,6 +12,9 @@ import structures.basic.Tile;
 import structures.basic.Unit;
 import structures.basic.Position;
 
+import utils.BasicObjectBuilders;
+import utils.StaticConfFiles;
+
 /**
  * Indicates that the user has clicked an object on the game canvas, in this case a tile.
  * The event returns the x (horizontal) and y (vertical) indices of the tile that was
@@ -33,6 +36,37 @@ public class TileClicked implements EventProcessor{
 
 		int tilex = message.get("tilex").asInt();
 		int tiley = message.get("tiley").asInt();
+
+		if (gameState.selectedHandCard != -1) {
+
+			Tile tile = gameState.board.getTile(tilex, tiley);
+
+			var hand = gameState.player1.getCardInHand();
+
+			if (gameState.selectedHandCard >= hand.size()) {
+				gameState.selectedHandCard = -1;
+				return;
+			}
+
+			var card = hand.get(gameState.selectedHandCard);
+
+			if (!card.isCreature()) {
+				gameState.selectedHandCard = -1;
+				return;
+			}
+
+			Unit unit = BasicObjectBuilders.loadUnit(
+					card.getUnitConfig(),
+					10,
+					Unit.class
+			);
+
+			unit.setPositionByTile(tile);
+			BasicCommands.drawUnit(out, unit, tile);
+
+			gameState.selectedHandCard = -1;
+			return;
+		}
 
 		Tile clickedTile = gameState.board.getTile(tilex, tiley);
 

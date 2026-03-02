@@ -76,5 +76,7 @@ public class GameState {
     }
 
     public TurnPhase phase = TurnPhase.HUMAN_TURN;  // Current turn phase
+
+    public int selectedHandCard = -1; // 0-5, -1 means none
 }
 

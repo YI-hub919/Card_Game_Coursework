@@ -30,7 +30,7 @@ public class GameState {
 
     public Unit player1Avatar; //store the 1st player information
 
-    public Unit player2Avatar;	//store 2ed player information
+    public Unit player2Avatar;    //store 2ed player information
 
     public Board board;
 
@@ -49,6 +49,7 @@ public class GameState {
     public int getRounds() {
         return rounds;
     }
+
     public void setRounds(int round) {
         rounds = round;
     }
@@ -62,12 +63,9 @@ public class GameState {
     }
 
     // Turn control variables
-
-    public boolean endTurnRequested = false;  // End turn button clicked
-
-    public int movingUnitsCount = 0;          // Units currently moving
-
-    public boolean isPlayer1Turn = true;      // True if it's Player 1's turn
+    private boolean endTurnRequested = false;  // End turn button clicked
+    public int movingUnitsCount = 0;
+    public boolean isPlayer1Turn = true;
 
     public enum TurnPhase {
         HUMAN_TURN,
@@ -75,12 +73,23 @@ public class GameState {
         AI_TURN
     }
 
-    public TurnPhase phase = TurnPhase.HUMAN_TURN;  // Current turn phase
+    public TurnPhase phase = TurnPhase.HUMAN_TURN;
 
-    public int selectedHandCard = -1; // 0-5, -1 means none
+    public void requestEndTurn() {
+        this.endTurnRequested = true;
+    }
 
+    public void clearEndTurnRequest() {
+        this.endTurnRequested = false;
+    }
+
+    public boolean isEndTurnRequested() {
+        return this.endTurnRequested;
+    }
+
+
+    public int selectedHandCard = -1; // 0-5, -1 means none selected
     public int nextUnitId = 10; // id for summoned units
-
     public ArrayList<Unit> summonedUnits = new ArrayList<>();
 }
 

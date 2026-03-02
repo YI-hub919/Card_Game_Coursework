@@ -92,6 +92,7 @@ public class TileClicked implements EventProcessor{
 			if (summonFX != null) {
 				BasicCommands.playEffectAnimation(out, summonFX, tile);
 			}
+			try { Thread.sleep(200); } catch (InterruptedException e) { e.printStackTrace(); }
 
 			// place + draw
 			unit.setPositionByTile(tile);

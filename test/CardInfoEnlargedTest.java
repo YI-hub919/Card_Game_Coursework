@@ -10,11 +10,10 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Fully compliant BasicCommands:
+ * Fully compliant CardInfoEnlarged:
  * 1. Fixes syntax errors
  * 2. Restores template dependencies
  * 3. Adds complete test coverage
- * JDK 11 compatible, template-integrated
  */
 public class CardInfoEnlargedTest {
 
@@ -32,6 +31,7 @@ public class CardInfoEnlargedTest {
                 out.tell(returnMessage, out);
             }
         } catch (Exception e) {
+            System.err.println("Failed to send player1 notification: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -41,7 +41,21 @@ public class CardInfoEnlargedTest {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "drawCard");
-            returnMessage.set("card", Json.toJson(card)); 
+
+            ObjectNode cardNode = Json.newObject();
+            if (card != null) {
+                cardNode.put("cardId", card.getCardId() != null ? card.getCardId() : "N/A");
+                cardNode.put("name", card.getName() != null ? card.getName() : "N/A");
+                cardNode.put("manaCost", card.getManaCost());
+                cardNode.put("type", card.getType() != null ? card.getType().name() : "N/A");
+                if (card.getType() == Card.CardType.CREATURE) {
+                    cardNode.put("attack", card.getAttack());
+                    cardNode.put("health", card.getHealth());
+                }
+                cardNode.put("description", card.getDescription() != null ? card.getDescription() : "No description");
+            }
+            returnMessage.set("card", cardNode);
+            
             returnMessage.put("position", position);
             returnMessage.put("mode", mode);
             if (altTell != null) altTell.tell(returnMessage);
@@ -49,6 +63,7 @@ public class CardInfoEnlargedTest {
                 out.tell(returnMessage, out);
             }
         } catch (Exception e) {
+            System.err.println("Failed to send drawCard message: " + e.getMessage());
             e.printStackTrace();
         }
     }
@@ -65,11 +80,11 @@ public class CardInfoEnlargedTest {
         StringBuilder enlargedInfo = new StringBuilder();
         enlargedInfo.append("=== ENLARGED CARD INFO ===\n");
         enlargedInfo.append("Name: ").append(card.getName() != null ? card.getName() : "N/A").append("\n");
-        enlargedInfo.append("Mana Cost: ").append(card.getManaCost() != null ? card.getManaCost() : "N/A").append("\n");
+        enlargedInfo.append("Mana Cost: ").append(card.getManaCost()).append("\n");
 
         if (card.getType() == Card.CardType.CREATURE) {
-            enlargedInfo.append("Attack: ").append(card.getAttack() != null ? card.getAttack() : "N/A").append("\n");
-            enlargedInfo.append("Health: ").append(card.getHealth() != null ? card.getHealth() : "N/A").append("\n");
+            enlargedInfo.append("Attack: ").append(card.getAttack()).append("\n");
+            enlargedInfo.append("Health: ").append(card.getHealth()).append("\n");
         }
 
         enlargedInfo.append("Description: ").append(card.getDescription() != null ? card.getDescription() : "No description");
@@ -106,10 +121,15 @@ public class CardInfoEnlargedTest {
         assertEquals(Card.CardType.CREATURE, creatureCard.getType());
 
         String expectedNotification = "=== ENLARGED CARD INFO ===\nName: Werewolf\nMana Cost: 2\nAttack: 2\nHealth: 2\nDescription: Fierce wolf with sharp claws";
-        assertTrue(testTell.getLastNotificationText().contains(expectedNotification));
+        String actualNotification = testTell.getLastNotificationText().replaceAll("\\r\\n", "\n");
+        assertEquals(expectedNotification, actualNotification);
 
         assertNotNull(testTell.getLastDrawCardNode());
-        assertEquals("Werewolf", testTell.getLastDrawCardNode().get("card").get("name").asText());
+        ObjectNode cardNode = (ObjectNode) testTell.getLastDrawCardNode().get("card");
+        assertNotNull(cardNode, "Card JSON node should not be null");
+        assertEquals("Werewolf", cardNode.get("name").asText());
+        assertEquals(0, testTell.getLastDrawCardNode().get("position").asInt());
+        assertEquals(1, testTell.getLastDrawCardNode().get("mode").asInt());
     }
 
     @Test
@@ -128,15 +148,16 @@ public class CardInfoEnlargedTest {
 
         assertEquals("Fireball", spellCard.getName());
         assertEquals(3, spellCard.getManaCost());
-        assertNull(spellCard.getAttack());
-        assertNull(spellCard.getHealth());
+        assertEquals(0, spellCard.getAttack()); 
+        assertEquals(0, spellCard.getHealth());
         assertEquals(Card.CardType.SPELL, spellCard.getType());
 
-        String notificationText = testTell.getLastNotificationText();
+        String notificationText = testTell.getLastNotificationText().replaceAll("\\r\\n", "\n");
         assertTrue(notificationText.contains("Name: Fireball"));
         assertTrue(notificationText.contains("Mana Cost: 3"));
         assertFalse(notificationText.contains("Attack:"));
         assertFalse(notificationText.contains("Health:"));
+        assertTrue(notificationText.contains("Description: Deal 4 damage to a single target"));
     }
 
     @Test
@@ -147,6 +168,7 @@ public class CardInfoEnlargedTest {
         showEnlargedCardInfo(null, null);
 
         assertEquals("Invalid card! No information to display", testTell.getLastNotificationText());
+        assertNull(testTell.getLastDrawCardNode());
     }
 
     @Test
@@ -159,13 +181,14 @@ public class CardInfoEnlargedTest {
         invalidCreature.setType(Card.CardType.CREATURE);
         invalidCreature.setManaCost(2);
         invalidCreature.setHealth(2);
-        invalidCreature.setAttack(null);
+        invalidCreature.setAttack(0); 
 
         showEnlargedCardInfo(null, invalidCreature);
 
-        String notificationText = testTell.getLastNotificationText();
-        assertTrue(notificationText.contains("Attack: N/A"));
+        String notificationText = testTell.getLastNotificationText().replaceAll("\\r\\n", "\n");
+        assertTrue(notificationText.contains("Attack: 0")); 
         assertTrue(notificationText.contains("Health: 2"));
+        assertTrue(notificationText.contains("Name: Broken Wolf"));
     }
 
     public static class DummyTell {
@@ -173,9 +196,11 @@ public class CardInfoEnlargedTest {
         private ObjectNode lastDrawCardNode;
 
         public void tell(ObjectNode message) {
-            if ("addPlayer1Notification".equals(message.get("messagetype").asText())) {
+            if (message == null) return;
+            String messageType = message.get("messagetype").asText();
+            if ("addPlayer1Notification".equals(messageType)) {
                 this.lastNotificationText = message.get("text").asText();
-            } else if ("drawCard".equals(message.get("messagetype").asText())) {
+            } else if ("drawCard".equals(messageType)) {
                 this.lastDrawCardNode = message;
             }
             System.out.println("Front-end Message: " + message.toString());

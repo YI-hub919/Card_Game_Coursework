@@ -5,13 +5,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import akka.actor.ActorRef;
 import play.libs.Json;
 import structures.basic.Card;
-import structures.basic.Player;
-import structures.basic.Tile;
-import structures.basic.Unit;
-import structures.basic.EffectAnimation;
-import structures.basic.UnitAnimation;
-import structures.basic.UnitAnimationType;
-import org.junit.jupiter.api.Test; // Add valid Test annotation import
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -21,13 +16,11 @@ import static org.junit.jupiter.api.Assertions.*;
  * 3. Adds complete test coverage
  * JDK 11 compatible, template-integrated
  */
-public class BasicCommands {
+public class CardInfoEnlargedTest {
 
-    private static ObjectMapper mapper = new ObjectMapper(); // Restore template's ObjectMapper
-    public static DummyTell altTell = null; // Restore altTell (for testing)
+    private static ObjectMapper mapper = new ObjectMapper();
+    public static DummyTell altTell = null;
 
-    // ======================== Restore Required Template Methods ========================
-    // These methods are mandatory for showEnlargedCardInfo() to work
     public static void addPlayer1Notification(ActorRef out, String text, int displayTimeSeconds) {
         try {
             ObjectNode returnMessage = Json.newObject();
@@ -35,7 +28,9 @@ public class BasicCommands {
             returnMessage.put("text", text);
             returnMessage.put("seconds", displayTimeSeconds);
             if (altTell != null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            else if (out != null) {
+                out.tell(returnMessage, out);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -46,20 +41,20 @@ public class BasicCommands {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "drawCard");
-            returnMessage.put("card", mapper.readTree(mapper.writeValueAsString(card)));
+            returnMessage.set("card", Json.toJson(card)); 
             returnMessage.put("position", position);
             returnMessage.put("mode", mode);
             if (altTell != null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            else if (out != null) {
+                out.tell(returnMessage, out);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    // ======================== Core Function (No @Test Annotation) ========================
     /**
      * Core function: Get card info + send enlarged display to UI
-     * (Removed invalid @Test annotation)
      */
     public static void showEnlargedCardInfo(ActorRef out, Card card) {
         if (card == null) {
@@ -69,11 +64,10 @@ public class BasicCommands {
 
         StringBuilder enlargedInfo = new StringBuilder();
         enlargedInfo.append("=== ENLARGED CARD INFO ===\n");
-        enlargedInfo.append("Name: ").append(card.getName()).append("\n");
-        enlargedInfo.append("Mana Cost: ").append(card.getManaCost()).append("\n");
+        enlargedInfo.append("Name: ").append(card.getName() != null ? card.getName() : "N/A").append("\n");
+        enlargedInfo.append("Mana Cost: ").append(card.getManaCost() != null ? card.getManaCost() : "N/A").append("\n");
 
         if (card.getType() == Card.CardType.CREATURE) {
-            // Add null check for attack/health (fix edge case)
             enlargedInfo.append("Attack: ").append(card.getAttack() != null ? card.getAttack() : "N/A").append("\n");
             enlargedInfo.append("Health: ").append(card.getHealth() != null ? card.getHealth() : "N/A").append("\n");
         }
@@ -84,10 +78,16 @@ public class BasicCommands {
         drawCard(out, card, 0, 1);
     }
 
-    // ======================== Complete Test Methods (Valid @Test) ========================
-    @Test // Valid test method (non-static, void return, no parameters)
+    @AfterEach
+    public void tearDown() {
+        altTell = null;
+    }
+
+    @Test
     public void testCreatureCardEnlargedDisplay() {
-        altTell = new DummyTell();
+        DummyTell testTell = new DummyTell();
+        altTell = testTell;
+
         Card creatureCard = new Card();
         creatureCard.setCardId("CRE001");
         creatureCard.setName("Werewolf");
@@ -97,20 +97,26 @@ public class BasicCommands {
         creatureCard.setHealth(2);
         creatureCard.setDescription("Fierce wolf with sharp claws");
 
-        // Execute core function
         showEnlargedCardInfo(null, creatureCard);
 
-        // Verify key info (add assertions for test validation)
         assertEquals("Werewolf", creatureCard.getName());
         assertEquals(2, creatureCard.getManaCost());
         assertEquals(2, creatureCard.getAttack());
         assertEquals(2, creatureCard.getHealth());
         assertEquals(Card.CardType.CREATURE, creatureCard.getType());
+
+        String expectedNotification = "=== ENLARGED CARD INFO ===\nName: Werewolf\nMana Cost: 2\nAttack: 2\nHealth: 2\nDescription: Fierce wolf with sharp claws";
+        assertTrue(testTell.getLastNotificationText().contains(expectedNotification));
+
+        assertNotNull(testTell.getLastDrawCardNode());
+        assertEquals("Werewolf", testTell.getLastDrawCardNode().get("card").get("name").asText());
     }
 
     @Test
     public void testSpellCardEnlargedDisplay() {
-        altTell = new DummyTell();
+        DummyTell testTell = new DummyTell();
+        altTell = testTell;
+
         Card spellCard = new Card();
         spellCard.setCardId("SPE001");
         spellCard.setName("Fireball");
@@ -120,48 +126,67 @@ public class BasicCommands {
 
         showEnlargedCardInfo(null, spellCard);
 
-        // Verify spell card has no attack/health
         assertEquals("Fireball", spellCard.getName());
         assertEquals(3, spellCard.getManaCost());
-        assertNull(spellCard.getAttack()); // Spell card should have null attack
-        assertNull(spellCard.getHealth()); // Spell card should have null health
+        assertNull(spellCard.getAttack());
+        assertNull(spellCard.getHealth());
         assertEquals(Card.CardType.SPELL, spellCard.getType());
+
+        String notificationText = testTell.getLastNotificationText();
+        assertTrue(notificationText.contains("Name: Fireball"));
+        assertTrue(notificationText.contains("Mana Cost: 3"));
+        assertFalse(notificationText.contains("Attack:"));
+        assertFalse(notificationText.contains("Health:"));
     }
 
     @Test
     public void testNullCard() {
-        altTell = new DummyTell();
-        // Verify null card triggers error notification
-        showEnlargedCardInfo(null, null); // No exception thrown (valid defensive programming)
+        DummyTell testTell = new DummyTell();
+        altTell = testTell;
+
+        showEnlargedCardInfo(null, null);
+
+        assertEquals("Invalid card! No information to display", testTell.getLastNotificationText());
     }
 
     @Test
     public void testCreatureCardWithMissingAttack() {
-        altTell = new DummyTell();
+        DummyTell testTell = new DummyTell();
+        altTell = testTell;
+
         Card invalidCreature = new Card();
         invalidCreature.setName("Broken Wolf");
         invalidCreature.setType(Card.CardType.CREATURE);
         invalidCreature.setManaCost(2);
         invalidCreature.setHealth(2);
-        invalidCreature.setAttack(null); // Missing attack
+        invalidCreature.setAttack(null);
 
         showEnlargedCardInfo(null, invalidCreature);
-        assertEquals("N/A", "Attack: N/A".substring(8)); // Verify attack shows N/A
+
+        String notificationText = testTell.getLastNotificationText();
+        assertTrue(notificationText.contains("Attack: N/A"));
+        assertTrue(notificationText.contains("Health: 2"));
     }
 
-    // ======================== DummyTell + Main (For Manual Testing) ========================
     public static class DummyTell {
+        private String lastNotificationText;
+        private ObjectNode lastDrawCardNode;
+
         public void tell(ObjectNode message) {
+            if ("addPlayer1Notification".equals(message.get("messagetype").asText())) {
+                this.lastNotificationText = message.get("text").asText();
+            } else if ("drawCard".equals(message.get("messagetype").asText())) {
+                this.lastDrawCardNode = message;
+            }
             System.out.println("Front-end Message: " + message.toString());
         }
-    }
 
-    public static void main(String[] args) {
-        BasicCommands tests = new BasicCommands();
-        tests.testCreatureCardEnlargedDisplay();
-        tests.testSpellCardEnlargedDisplay();
-        tests.testNullCard();
-        tests.testCreatureCardWithMissingAttack();
-        System.out.println("✅ All tests passed!");
+        public String getLastNotificationText() {
+            return lastNotificationText;
+        }
+
+        public ObjectNode getLastDrawCardNode() {
+            return lastDrawCardNode;
+        }
     }
 }

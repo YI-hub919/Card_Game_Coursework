@@ -20,7 +20,7 @@ import structures.basic.UnitAnimationType;
  * @author Adapted for game card display requirements
  */
 @SuppressWarnings({"deprecation"})
-public class BasicCommands {
+public class CardInfoEnlarged {
 
     private static final ObjectMapper mapper = new ObjectMapper()
             .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)

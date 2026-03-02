@@ -27,8 +27,6 @@ public class GameState {
 
     public Player player1 = new Player();
     public Player player2 = new Player();
-  
-    public boolean isHumanTurn = true; // true = human's turn, false = AI's turn
 
     public Unit player1Avatar; //store the 1st player information
 
@@ -61,6 +59,33 @@ public class GameState {
             maxmana = 9;
         }
         return maxmana;
+    }
+
+    // Turn control variables
+
+    private boolean endTurnRequested = false;  // End turn button clicked
+
+    public boolean isPlayer1Turn = true;      // True if it's Player 1's turn
+
+    public enum TurnPhase {
+        HUMAN_TURN,
+        END_TURN_PENDING,
+        AI_TURN
+    }
+
+    public TurnPhase phase = TurnPhase.HUMAN_TURN;  // Current turn phase
+
+    // End turn flag should only be written via these methods
+    public void requestEndTurn() {
+        this.endTurnRequested = true;
+    }
+
+    public void clearEndTurnRequest() {
+        this.endTurnRequested = false;
+    }
+
+    public boolean isEndTurnRequested() {
+        return this.endTurnRequested;
     }
 }
 

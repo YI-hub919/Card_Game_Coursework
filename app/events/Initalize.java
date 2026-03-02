@@ -108,6 +108,24 @@ public class Initalize implements EventProcessor {
         BasicCommands.setPlayer1Mana(out, gameState.player1);
         BasicCommands.setPlayer2Mana(out, gameState.player2);
 
+        // Game start state
+        gameState.isPlayer1Turn = true;
+        gameState.phase = GameState.TurnPhase.HUMAN_TURN;
+
+        gameState.nextRounds();
+        int mana = gameState.getManaCapacity();
+
+        humanPlayer.setMana(mana);
+        BasicCommands.setPlayer1Mana(out, gameState.player1);
+
+        BasicCommands.addPlayer1Notification(out, "Your Turn", 2);
+
+// Human draws 3 starting cards
+        for (int i = 0; i < 3; i++) {
+            Player.drawCard(out, humanPlayer, true);
+        }
+
+        /*
         // Round 1 setup
         gameState.nextRounds();
         int roundNum = gameState.getRounds();
@@ -140,5 +158,7 @@ public class Initalize implements EventProcessor {
         aiPlayer.setMana(0);
         BasicCommands.setPlayer2Mana(out, gameState.player2);
         try { Thread.sleep(2000); } catch (InterruptedException e) { e.printStackTrace(); }
+
+         */
     }
 }

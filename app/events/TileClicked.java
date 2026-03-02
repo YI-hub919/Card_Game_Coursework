@@ -63,11 +63,6 @@ public class TileClicked implements EventProcessor{
 				return;
 			}
 
-			if (!canSummonHere(gameState, tilex)) {
-				BasicCommands.addPlayer1Notification(out, "Cannot summon here", 2);
-				gameState.selectedHandCard = -1;
-				return;
-			}
 
 			// Cannot summon onto an occupied tile
 			if (isTileOccupied(gameState, tilex, tiley)) {
@@ -92,8 +87,9 @@ public class TileClicked implements EventProcessor{
 			if (summonFX != null) {
 				BasicCommands.playEffectAnimation(out, summonFX, tile);
 			}
-			try { Thread.sleep(200); } catch (InterruptedException e) { e.printStackTrace(); }
-
+			if (out != null) {
+				try { Thread.sleep(200); } catch (InterruptedException e) { e.printStackTrace(); }
+			}
 			// place + draw
 			unit.setPositionByTile(tile);
 			BasicCommands.drawUnit(out, unit, tile);
@@ -174,11 +170,4 @@ public class TileClicked implements EventProcessor{
 		return false;
 	}
 
-	private boolean canSummonHere(GameState gs, int tilex) {
-		if (gs.isPlayer1Turn) {
-			return tilex <= 4;
-		} else {
-			return tilex >= 6;
-		}
-	}
 }

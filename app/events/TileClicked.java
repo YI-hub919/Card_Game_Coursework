@@ -50,19 +50,50 @@ public class TileClicked implements EventProcessor{
 
 			var card = hand.get(gameState.selectedHandCard);
 
+			if (gameState.player1.getMana() < card.getManacost()) {
+				BasicCommands.addPlayer1Notification(out, "Not enough mana", 2);
+				gameState.selectedHandCard = -1;
+				return;
+			}
+
 			if (!card.isCreature()) {
 				gameState.selectedHandCard = -1;
 				return;
 			}
 
-			Unit unit = BasicObjectBuilders.loadUnit(
-					card.getUnitConfig(),
-					10,
-					Unit.class
-			);
+			int newId = gameState.nextUnitId++;
+			Unit unit = BasicObjectBuilders.loadUnit(card.getUnitConfig(), newId, Unit.class);
+
+			unit.setAttack(card.getBigCard().getAttack());
+			unit.setHealth(card.getBigCard().getHealth());
+
+			System.out.println("summon newId=" + newId
+					+ " card big atk/hp=" + card.getBigCard().getAttack() + "/" + card.getBigCard().getHealth()
+					+ " unit atk/hp=" + unit.getAttack() + "/" + unit.getHealth());
+
+			gameState.player1.setMana(gameState.player1.getMana() - card.getManacost());
+			BasicCommands.setPlayer1Mana(out, gameState.player1);
 
 			unit.setPositionByTile(tile);
 			BasicCommands.drawUnit(out, unit, tile);
+
+			int atk = card.getBigCard().getAttack();
+			int hp  = card.getBigCard().getHealth();
+
+			unit.setAttack(atk);
+			unit.setHealth(hp);
+
+			unit.setPositionByTile(tile);
+			BasicCommands.drawUnit(out, unit, tile);
+
+			BasicCommands.setUnitAttack(out, unit, atk);
+			BasicCommands.setUnitHealth(out, unit, hp);
+
+			new Thread(() -> {
+				try { Thread.sleep(50); } catch (InterruptedException e) { e.printStackTrace(); }
+				BasicCommands.setUnitAttack(out, unit, atk);
+				BasicCommands.setUnitHealth(out, unit, hp);
+			}).start();
 
 			gameState.selectedHandCard = -1;
 			return;

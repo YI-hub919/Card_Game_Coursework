@@ -65,8 +65,6 @@ public class GameState {
 
     private boolean endTurnRequested = false;  // End turn button clicked
 
-    public int movingUnitsCount = 0;          // Units currently moving
-
     public boolean isPlayer1Turn = true;      // True if it's Player 1's turn
 
     public enum TurnPhase {

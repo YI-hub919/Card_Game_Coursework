@@ -63,7 +63,7 @@ public class GameState {
 
     // Turn control variables
 
-    public boolean endTurnRequested = false;  // End turn button clicked
+    private boolean endTurnRequested = false;  // End turn button clicked
 
     public int movingUnitsCount = 0;          // Units currently moving
 
@@ -76,5 +76,18 @@ public class GameState {
     }
 
     public TurnPhase phase = TurnPhase.HUMAN_TURN;  // Current turn phase
+
+    // End turn flag should only be written via these methods
+    public void requestEndTurn() {
+        this.endTurnRequested = true;
+    }
+
+    public void clearEndTurnRequest() {
+        this.endTurnRequested = false;
+    }
+
+    public boolean isEndTurnRequested() {
+        return this.endTurnRequested;
+    }
 }
 

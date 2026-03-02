@@ -2,9 +2,10 @@ package commands;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import akka.actor.ActorRef;
 import play.libs.Json;
-import structures.basic.Card; // Use template's Card class (no redefinition)
+import structures.basic.Card;
 import structures.basic.Player;
 import structures.basic.Tile;
 import structures.basic.Unit;
@@ -14,124 +15,160 @@ import structures.basic.UnitAnimationType;
 
 /**
  * Adapted BasicCommands: Integrates with template's Card class
- * Implements card info query + enlarged display (JDK 11 compatible)
+ * Implements card info query + enlarged display
  * No duplicate class definitions, aligns with template logic
  * @author Adapted for game card display requirements
  */
+@SuppressWarnings({"deprecation"})
 public class BasicCommands {
 
-    private static ObjectMapper mapper = new ObjectMapper();
-    public static DummyTell altTell = null;
+    private static final ObjectMapper mapper = new ObjectMapper()
+            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+            .configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
 
-    // ======================== Keep Template's Original Methods (Unmodified) ========================
-    // (Retain all original methods: drawTile/drawUnit/setUnitAttack/setPlayer1Health/etc.)
-    // [Note: Copy all original template methods here to avoid breaking existing game logic]
+    private static DummyTell altTell = null; 
 
-    @SuppressWarnings({"deprecation"})
+    // ==========Add undefined DummyTell interface (adapt to message sending logic) ==========
+    public interface DummyTell {
+        void tell(ObjectNode message); // Define tell method compatible with ActorRef.tell
+    }
+
+    // ==========Universal message sending method (resolve code redundancy) ==========
+    /**
+     * Unified message sending logic, compatible with DummyTell and ActorRef
+     * @param out Original ActorRef
+     * @param message JSON message to send
+     */
+    private static void sendJsonMessage(ActorRef out, ObjectNode message) {
+        try {
+            if (altTell != null) {
+                altTell.tell(message); // Send via DummyTell
+            } else {
+                if (out != null) { // Add null protection for out
+                    out.tell(message, ActorRef.noSender()); 
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // ==========Universal exception handling method==========
+    /**
+     * Standardized exception handling: print stack trace + send notification to frontend
+     * @param out ActorRef for sending notifications
+     * @param errorMsg Error prompt text
+     * @param e Caught exception
+     */
+    private static void handleException(ActorRef out, String errorMsg, Exception e) {
+        e.printStackTrace(); // Print exception stack trace
+        try {
+            // Send error notification to frontend
+            addPlayer1Notification(out, errorMsg + ": " + (e.getMessage() == null ? "Unknown error" : e.getMessage()), 5);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    // ======================== ORIGINAL METHODS========================
     public static void drawTile(ActorRef out, Tile tile, int mode) {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "drawTile");
-            returnMessage.put("tile", mapper.readTree(mapper.writeValueAsString(tile)));
+            returnMessage.set("tile", tile == null ? Json.newObject() : Json.toJson(tile));
             returnMessage.put("mode", mode);
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            sendJsonMessage(out, returnMessage); // Replace duplicate message sending logic
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static void drawUnit(ActorRef out, Unit unit, Tile tile) {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "drawUnit");
-            returnMessage.put("tile", mapper.readTree(mapper.writeValueAsString(tile)));
-            returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            returnMessage.set("tile", tile == null ? Json.newObject() : Json.toJson(tile));
+            returnMessage.set("unit", unit == null ? Json.newObject() : Json.toJson(unit));
+            sendJsonMessage(out, returnMessage); // Replace duplicate message sending logic
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static void setUnitAttack(ActorRef out, Unit unit, int attack) {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "setUnitAttack");
-            returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
+            returnMessage.set("unit", unit == null ? Json.newObject() : Json.toJson(unit));
             returnMessage.put("attack", attack);
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            sendJsonMessage(out, returnMessage); // Replace duplicate message sending logic
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static void setUnitHealth(ActorRef out, Unit unit, int health) {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "setUnitHealth");
-            returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
+            returnMessage.set("unit", unit == null ? Json.newObject() : Json.toJson(unit));
             returnMessage.put("health", health);
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            sendJsonMessage(out, returnMessage); // Replace duplicate message sending logic
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static void moveUnitToTile(ActorRef out, Unit unit, Tile tile) {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "moveUnitToTile");
-            returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
-            returnMessage.put("tile", mapper.readTree(mapper.writeValueAsString(tile)));
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            returnMessage.set("unit", unit == null ? Json.newObject() : Json.toJson(unit));
+            returnMessage.set("tile", tile == null ? Json.newObject() : Json.toJson(tile));
+            sendJsonMessage(out, returnMessage); // Replace duplicate message sending logic
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static void moveUnitToTile(ActorRef out, Unit unit, Tile tile, boolean yfirst) {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "moveUnitToTile");
             returnMessage.put("yfirst", yfirst);
-            returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
-            returnMessage.put("tile", mapper.readTree(mapper.writeValueAsString(tile)));
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            // 修复：增加null校验
+            returnMessage.set("unit", unit == null ? Json.newObject() : Json.toJson(unit));
+            returnMessage.set("tile", tile == null ? Json.newObject() : Json.toJson(tile));
+            sendJsonMessage(out, returnMessage); // Replace duplicate message sending logic
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static int playUnitAnimation(ActorRef out, Unit unit, UnitAnimationType animationToPlay) {
         try {
+            if (unit == null || animationToPlay == null) {
+                addPlayer1Notification(out, "Invalid unit/animation type", 3);
+                return 0;
+            }
             unit.setAnimation(animationToPlay);
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "playUnitAnimation");
-            returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
+            returnMessage.set("unit", Json.toJson(unit));
             returnMessage.put("animation", animationToPlay.toString());
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            sendJsonMessage(out, returnMessage); 
 
-            UnitAnimation animation = null;
-            if (animationToPlay.equals(UnitAnimationType.idle)) animation = unit.getAnimations().getIdle();
-            if (animationToPlay.equals(UnitAnimationType.attack)) animation = unit.getAnimations().getAttack();
-            if (animationToPlay.equals(UnitAnimationType.channel)) animation = unit.getAnimations().getChannel();
-            if (animationToPlay.equals(UnitAnimationType.death)) animation = unit.getAnimations().getDeath();
-            if (animationToPlay.equals(UnitAnimationType.hit)) animation = unit.getAnimations().getHit();
-            if (animationToPlay.equals(UnitAnimationType.move)) animation = unit.getAnimations().getMove();
+            UnitAnimation animation = switch (animationToPlay) {
+                case idle -> unit.getAnimations().getIdle();
+                case attack -> unit.getAnimations().getAttack();
+                case channel -> unit.getAnimations().getChannel();
+                case death -> unit.getAnimations().getDeath();
+                case hit -> unit.getAnimations().getHit();
+                case move -> unit.getAnimations().getMove();
+                default -> null;
+            };
 
-            if (animation==null) return 0;
+            if (animation == null) return 0;
             return ((1000*(animation.getFrameStartEndIndices()[1]-animation.getFrameStartEndIndices()[0]))/animation.getFps())+50;
         } catch (Exception e) {
             e.printStackTrace();
@@ -139,81 +176,69 @@ public class BasicCommands {
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static void deleteUnit(ActorRef out, Unit unit) {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "deleteUnit");
-            returnMessage.put("unit", mapper.readTree(mapper.writeValueAsString(unit)));
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            returnMessage.set("unit", unit == null ? Json.newObject() : Json.toJson(unit));
+            sendJsonMessage(out, returnMessage); 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static void setPlayer1Health(ActorRef out, Player player) {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "setPlayer1Health");
-            returnMessage.put("player", mapper.readTree(mapper.writeValueAsString(player)));
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            returnMessage.set("player", player == null ? Json.newObject() : Json.toJson(player));
+            sendJsonMessage(out, returnMessage); 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static void setPlayer2Health(ActorRef out, Player player) {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "setPlayer2Health");
-            returnMessage.put("player", mapper.readTree(mapper.writeValueAsString(player)));
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            returnMessage.set("player", player == null ? Json.newObject() : Json.toJson(player));
+            sendJsonMessage(out, returnMessage); 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static void setPlayer1Mana(ActorRef out, Player player) {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "setPlayer1Mana");
-            returnMessage.put("player", mapper.readTree(mapper.writeValueAsString(player)));
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            returnMessage.set("player", player == null ? Json.newObject() : Json.toJson(player));
+            sendJsonMessage(out, returnMessage); 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static void setPlayer2Mana(ActorRef out, Player player) {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "setPlayer2Mana");
-            returnMessage.put("player", mapper.readTree(mapper.writeValueAsString(player)));
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            returnMessage.set("player", player == null ? Json.newObject() : Json.toJson(player));
+            sendJsonMessage(out, returnMessage); 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static void drawCard(ActorRef out, Card card, int position, int mode) {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "drawCard");
-            returnMessage.put("card", mapper.readTree(mapper.writeValueAsString(card)));
+            returnMessage.set("card", card == null ? Json.newObject() : Json.toJson(card));
             returnMessage.put("position", position);
             returnMessage.put("mode", mode);
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            sendJsonMessage(out, returnMessage); 
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -224,22 +249,23 @@ public class BasicCommands {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "deleteCard");
             returnMessage.put("position", position);
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            sendJsonMessage(out, returnMessage); 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
     public static int playEffectAnimation(ActorRef out, EffectAnimation effect, Tile tile) {
         try {
+            if (effect == null || tile == null) {
+                addPlayer1Notification(out, "Invalid effect/tile for animation", 3);
+                return 0;
+            }
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "playEffectAnimation");
-            returnMessage.put("effect", mapper.readTree(mapper.writeValueAsString(effect)));
-            returnMessage.put("tile", mapper.readTree(mapper.writeValueAsString(tile)));
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            returnMessage.set("effect", Json.toJson(effect));
+            returnMessage.set("tile", Json.toJson(tile));
+            sendJsonMessage(out, returnMessage); 
 
             return ((1000*effect.getAnimationTextures().size())/effect.getFps())+50;
         } catch (Exception e) {
@@ -252,32 +278,41 @@ public class BasicCommands {
         try {
             ObjectNode returnMessage = Json.newObject();
             returnMessage.put("messagetype", "addPlayer1Notification");
-            returnMessage.put("text", text);
+            returnMessage.put("text", text == null ? "Unknown error" : text); // Null fallback
             returnMessage.put("seconds", displayTimeSeconds);
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            sendJsonMessage(out, returnMessage); 
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    @SuppressWarnings({"deprecation"})
+    /**
+     * Play projectile animation (optimized null check + unified message type)
+     * @param out ActorRef for front-end communication
+     * @param effect EffectAnimation instance for projectile
+     * @param mode Animation mode (1=linear, 2=arc, 3=instant)
+     * @param startTile Start position of projectile
+     * @param targetTile Target position of projectile
+     */
     public static void playProjectileAnimation(ActorRef out, EffectAnimation effect, int mode, Tile startTile, Tile targetTile) {
         try {
+            if (effect == null || startTile == null || targetTile == null) {
+                addPlayer1Notification(out, "Invalid projectile animation parameters", 3);
+                return;
+            }
             ObjectNode returnMessage = Json.newObject();
-            returnMessage.put("messagetype", "drawProjectile");
-            returnMessage.put("effect", mapper.readTree(mapper.writeValueAsString(effect)));
-            returnMessage.put("tile", mapper.readTree(mapper.writeValueAsString(startTile)));
-            returnMessage.put("targetTile", mapper.readTree(mapper.writeValueAsString(targetTile)));
-            returnMessage.put("mode", mapper.readTree(mapper.writeValueAsString(mode)));
-            if (altTell!=null) altTell.tell(returnMessage);
-            else out.tell(returnMessage, out);
+            returnMessage.put("messagetype", "playProjectileAnimation"); 
+            returnMessage.set("effect", Json.toJson(effect));
+            returnMessage.set("tile", Json.toJson(startTile));
+            returnMessage.set("targetTile", Json.toJson(targetTile));
+            returnMessage.put("mode", mode); 
+            sendJsonMessage(out, returnMessage); 
         } catch (Exception e) {
-            e.printStackTrace();
+            handleException(out, "Failed to play projectile animation", e); 
         }
     }
 
-    // ======================== New: Card Info + Enlarged Display (Integrated with Template) ========================
+    // ========================Enlarged card display method (null protection) ========================
     /**
      * Core function: Get card info (mana/attack/health) + send enlarged display to UI
      * @param out ActorRef for front-end communication (template standard)
@@ -290,23 +325,30 @@ public class BasicCommands {
             return;
         }
 
-        // 2. Build enlarged card info (meets functional requirements)
+        // 2. Build enlarged card info (add null fallback for all properties)
         StringBuilder enlargedInfo = new StringBuilder();
         enlargedInfo.append("=== ENLARGED CARD INFO ===\n");
-        enlargedInfo.append("Name: ").append(card.getName()).append("\n");
+        // Null fallback for name
+        enlargedInfo.append("Name: ").append(card.getName() == null ? "Unknown Card" : card.getName()).append("\n");
+        // Fallback for mana cost (int type defaults to 0, no extra handling needed but semantics retained)
         enlargedInfo.append("Mana Cost: ").append(card.getManaCost()).append("\n");
 
         // 3. Add attack/health only for creature cards
-        if (card.getType() == Card.CardType.CREATURE) {
+        Card.CardType cardType = card.getType();
+        if (cardType != null && cardType == Card.CardType.CREATURE) {
             enlargedInfo.append("Attack: ").append(card.getAttack()).append("\n");
             enlargedInfo.append("Health: ").append(card.getHealth()).append("\n");
         }
 
-        // 4. Add description (spell/creature)
-        enlargedInfo.append("Description: ").append(card.getDescription());
+        // 4. Add description (null fallback)
+        enlargedInfo.append("Description: ").append(card.getDescription() == null ? "No description" : card.getDescription());
 
         // 5. Send enlarged info to UI (via player notification + drawCard in enlarged mode)
         addPlayer1Notification(out, enlargedInfo.toString(), 5); // Show for 5 seconds
         drawCard(out, card, 0, 1); // Mode=1: Enlarged display (template's visual mode)
+    }
+
+    public static void setAltTell(DummyTell altTell) {
+        BasicCommands.altTell = altTell;
     }
 }

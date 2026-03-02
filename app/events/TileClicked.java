@@ -61,39 +61,52 @@ public class TileClicked implements EventProcessor{
 				return;
 			}
 
+			// Cannot summon onto an occupied tile
+			if (isTileOccupied(gameState, tilex, tiley)) {
+				BasicCommands.addPlayer1Notification(out, "Tile is occupied", 2);
+				gameState.selectedHandCard = -1;
+				return;
+			}
+
 			int newId = gameState.nextUnitId++;
 			Unit unit = BasicObjectBuilders.loadUnit(card.getUnitConfig(), newId, Unit.class);
 
-			unit.setAttack(card.getBigCard().getAttack());
-			unit.setHealth(card.getBigCard().getHealth());
-
-			System.out.println("summon newId=" + newId
-					+ " card big atk/hp=" + card.getBigCard().getAttack() + "/" + card.getBigCard().getHealth()
-					+ " unit atk/hp=" + unit.getAttack() + "/" + unit.getHealth());
-
-			gameState.player1.setMana(gameState.player1.getMana() - card.getManacost());
-			BasicCommands.setPlayer1Mana(out, gameState.player1);
-
-			unit.setPositionByTile(tile);
-			BasicCommands.drawUnit(out, unit, tile);
-
 			int atk = card.getBigCard().getAttack();
 			int hp  = card.getBigCard().getHealth();
-
 			unit.setAttack(atk);
 			unit.setHealth(hp);
 
+			// spend mana
+			gameState.player1.setMana(gameState.player1.getMana() - card.getManacost());
+			BasicCommands.setPlayer1Mana(out, gameState.player1);
+
+			// place + draw
 			unit.setPositionByTile(tile);
 			BasicCommands.drawUnit(out, unit, tile);
 
+			// update stats (front-end sometimes needs a short delay)
 			BasicCommands.setUnitAttack(out, unit, atk);
 			BasicCommands.setUnitHealth(out, unit, hp);
-
 			new Thread(() -> {
 				try { Thread.sleep(50); } catch (InterruptedException e) { e.printStackTrace(); }
 				BasicCommands.setUnitAttack(out, unit, atk);
 				BasicCommands.setUnitHealth(out, unit, hp);
 			}).start();
+
+			// track summoned unit (for occupied checks, later attacks, etc.)
+			gameState.summonedUnits.add(unit);
+
+			hand.remove(gameState.selectedHandCard);
+
+			// clear slots 1..6
+			for (int slot = 1; slot <= 6; slot++) {
+				BasicCommands.drawCard(out, null, slot, 0);
+			}
+
+			// redraw current hand into slots 1..handSize
+			for (int i = 0; i < hand.size(); i++) {
+				BasicCommands.drawCard(out, hand.get(i), i + 1, 0);
+			}
 
 			gameState.selectedHandCard = -1;
 			return;
@@ -128,6 +141,23 @@ public class TileClicked implements EventProcessor{
 		} else {
 			BasicCommands.addPlayer1Notification(out, "No unit on this tile", 2);
 		}
+	}
+
+	private boolean isTileOccupied(GameState gs, int x, int y) {
+		if (gs.player1Avatar != null && gs.player1Avatar.getPosition() != null
+				&& gs.player1Avatar.getPosition().getTilex() == x
+				&& gs.player1Avatar.getPosition().getTiley() == y) return true;
+
+		if (gs.player2Avatar != null && gs.player2Avatar.getPosition() != null
+				&& gs.player2Avatar.getPosition().getTilex() == x
+				&& gs.player2Avatar.getPosition().getTiley() == y) return true;
+
+		for (Unit u : gs.summonedUnits) {
+			if (u != null && u.getPosition() != null
+					&& u.getPosition().getTilex() == x
+					&& u.getPosition().getTiley() == y) return true;
+		}
+		return false;
 	}
 
 }

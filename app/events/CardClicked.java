@@ -30,27 +30,38 @@ public class CardClicked implements EventProcessor{
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 
 		if (message == null) return;
-
 		JsonNode posNode = message.get("position");
 		if (posNode == null) return;
 
-		int handPosition = posNode.asInt() - 1;
-
-		// Only allow selection on player1's turn
 		if (!gameState.isPlayer1Turn) {
 			if (out != null) BasicCommands.addPlayer1Notification(out, "Not your turn", 2);
 			return;
 		}
 
-		gameState.selectedHandCard = handPosition;
+		int rawPos = posNode.asInt();
+		var hand = gameState.player1.getCardInHand();
+		int handSize = hand.size();
 
-		if (out != null) {
-			BasicCommands.addPlayer1Notification(out, "Selected card: " + handPosition, 2);
+		int idx;
+
+		// Accept BOTH styles:
+		// - 0-based: 0..handSize-1
+		// - 1-based: 1..handSize
+		if (rawPos >= 0 && rawPos < handSize) {
+			idx = rawPos;          // 0-based
+		} else if (rawPos >= 1 && rawPos <= handSize) {
+			idx = rawPos - 1;      // 1-based
+		} else {
+			gameState.selectedHandCard = -1;
+			if (out != null) BasicCommands.addPlayer1Notification(out, "No card here", 2);
+			return;
 		}
 
-		if (handPosition < 0) return;
+		gameState.selectedHandCard = idx;
 
-
+		if (out != null) {
+			BasicCommands.addPlayer1Notification(out, "Selected card slot: " + rawPos, 2);
+		}
 	}
 
 }

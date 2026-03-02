@@ -80,5 +80,7 @@ public class GameState {
     public int selectedHandCard = -1; // 0-5, -1 means none
 
     public int nextUnitId = 10; // id for summoned units
+
+    public ArrayList<Unit> summonedUnits = new ArrayList<>();
 }
 

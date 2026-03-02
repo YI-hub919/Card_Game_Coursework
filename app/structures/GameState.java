@@ -14,6 +14,7 @@ import structures.basic.Unit;
  * @author Dr. Richard McCreadie
  *
  */
+
 public class GameState {
 
     public ArrayList<Tile> boardTile = new ArrayList<>();
@@ -26,6 +27,8 @@ public class GameState {
 
     public Player player1 = new Player();
     public Player player2 = new Player();
+  
+    public boolean isHumanTurn = true; // true = human's turn, false = AI's turn
 
     public Unit player1Avatar; //store the 1st player information
 

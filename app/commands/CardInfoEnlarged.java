@@ -14,7 +14,7 @@ import structures.basic.UnitAnimation;
 import structures.basic.UnitAnimationType;
 
 /**
- * Adapted BasicCommands: Integrates with template's Card class
+ * Integrates with template's Card class
  * Implements card info query + enlarged display
  * No duplicate class definitions, aligns with template logic
  * @author Adapted for game card display requirements
@@ -349,6 +349,6 @@ public class CardInfoEnlarged {
     }
 
     public static void setAltTell(DummyTell altTell) {
-        BasicCommands.altTell = altTell;
+        CardInfoEnlarged.altTell = altTell;
     }
 }

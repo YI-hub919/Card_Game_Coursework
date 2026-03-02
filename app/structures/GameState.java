@@ -15,6 +15,7 @@ import structures.basic.Unit;
  *
  * @author Dr. Richard McCreadie
  */
+
 public class GameState {
 
     public enum UnitType {
@@ -32,6 +33,8 @@ public class GameState {
 
     public Player player1 = new Player();
     public Player player2 = new Player();
+  
+    public boolean isHumanTurn = true;
 
     public Avatar player1Avatar;
     public Avatar player2Avatar;

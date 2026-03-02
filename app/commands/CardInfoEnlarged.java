@@ -71,30 +71,6 @@ public class CardInfoEnlarged {
     }
 
     // ======================== ORIGINAL METHODS========================
-    public static void drawTile(ActorRef out, Tile tile, int mode) {
-        try {
-            ObjectNode returnMessage = Json.newObject();
-            returnMessage.put("messagetype", "drawTile");
-            returnMessage.set("tile", tile == null ? Json.newObject() : Json.toJson(tile));
-            returnMessage.put("mode", mode);
-            sendJsonMessage(out, returnMessage); // Replace duplicate message sending logic
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void drawUnit(ActorRef out, Unit unit, Tile tile) {
-        try {
-            ObjectNode returnMessage = Json.newObject();
-            returnMessage.put("messagetype", "drawUnit");
-            returnMessage.set("tile", tile == null ? Json.newObject() : Json.toJson(tile));
-            returnMessage.set("unit", unit == null ? Json.newObject() : Json.toJson(unit));
-            sendJsonMessage(out, returnMessage); // Replace duplicate message sending logic
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public static void setUnitAttack(ActorRef out, Unit unit, int attack) {
         try {
             ObjectNode returnMessage = Json.newObject();
@@ -231,19 +207,6 @@ public class CardInfoEnlarged {
         }
     }
 
-    public static void drawCard(ActorRef out, Card card, int position, int mode) {
-        try {
-            ObjectNode returnMessage = Json.newObject();
-            returnMessage.put("messagetype", "drawCard");
-            returnMessage.set("card", card == null ? Json.newObject() : Json.toJson(card));
-            returnMessage.put("position", position);
-            returnMessage.put("mode", mode);
-            sendJsonMessage(out, returnMessage); 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
     public static void deleteCard(ActorRef out, int position) {
         try {
             ObjectNode returnMessage = Json.newObject();
@@ -342,10 +305,6 @@ public class CardInfoEnlarged {
 
         // 4. Add description (null fallback)
         enlargedInfo.append("Description: ").append(card.getDescription() == null ? "No description" : card.getDescription());
-
-        // 5. Send enlarged info to UI (via player notification + drawCard in enlarged mode)
-        addPlayer1Notification(out, enlargedInfo.toString(), 5); // Show for 5 seconds
-        drawCard(out, card, 0, 1); // Mode=1: Enlarged display (template's visual mode)
     }
 
     public static void setAltTell(DummyTell altTell) {

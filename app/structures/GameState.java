@@ -73,7 +73,7 @@ public class GameState {
         AI_TURN
     }
 
-    public TurnPhase phase = TurnPhase.HUMAN_TURN;  // Current turn phase
+    public TurnPhase phase = TurnPhase.HUMAN_TURN;
 
     // End turn flag should only be written via these methods
     public void requestEndTurn() {
@@ -87,5 +87,10 @@ public class GameState {
     public boolean isEndTurnRequested() {
         return this.endTurnRequested;
     }
+
+
+    public int selectedHandCard = -1; // 0-5, -1 means none selected
+    public int nextUnitId = 10; // id for summoned units
+    public ArrayList<Unit> summonedUnits = new ArrayList<>();
 }
 

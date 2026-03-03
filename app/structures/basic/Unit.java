@@ -23,6 +23,14 @@ public class Unit {
 	int health;
 	int attack;
 	int robustness;
+	private String unitName;
+	public String getUnitName() {
+		return unitName;
+	}
+
+	public void setUnitName(String unitName) {
+		this.unitName = unitName;
+	}
 	@JsonIgnore
 	private Player associatedPlayer;
 
@@ -163,6 +171,7 @@ public class Unit {
 	public void setPositionByTile(Tile tile) {
 		position = new Position(tile.getXpos(),tile.getYpos(),tile.getTilex(),tile.getTiley());
 	}
-	
+
+	public boolean canAttack = false;
 	
 }

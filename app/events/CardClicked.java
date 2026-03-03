@@ -48,7 +48,14 @@ public class CardClicked implements EventProcessor{
 			return;
 		}
 
+		if (gameState.selectedHandCard == idx) {
+			gameState.selectedHandCard = -1;
+			if (out != null) BasicCommands.addPlayer1Notification(out, "Card unselected", 2);
+			return;
+		}
+
 		gameState.selectedHandCard = idx;
+		if (out != null) BasicCommands.addPlayer1Notification(out, "Card selected", 2);
 	}
 
 }

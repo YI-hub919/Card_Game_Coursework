@@ -23,6 +23,14 @@ public class Unit {
 	int health;
 	int attack;
 	int robustness;
+	private String unitName;
+	public String getUnitName() {
+		return unitName;
+	}
+
+	public void setUnitName(String unitName) {
+		this.unitName = unitName;
+	}
 	@JsonIgnore
 	private Player associatedPlayer;
 

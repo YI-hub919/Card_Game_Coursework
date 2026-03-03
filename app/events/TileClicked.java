@@ -73,6 +73,7 @@ public class TileClicked implements EventProcessor{
 
 			int newId = gameState.nextUnitId++;
 			Unit unit = BasicObjectBuilders.loadUnit(card.getUnitConfig(), newId, Unit.class);
+			unit.setUnitName(card.getCardname());
 
 			int atk = card.getBigCard().getAttack();
 			int hp  = card.getBigCard().getHealth();
@@ -97,11 +98,17 @@ public class TileClicked implements EventProcessor{
 			// update stats (front-end sometimes needs a short delay)
 			BasicCommands.setUnitAttack(out, unit, atk);
 			BasicCommands.setUnitHealth(out, unit, hp);
-			new Thread(() -> {
-				try { Thread.sleep(50); } catch (InterruptedException e) { e.printStackTrace(); }
-				BasicCommands.setUnitAttack(out, unit, atk);
-				BasicCommands.setUnitHealth(out, unit, hp);
-			}).start();
+			if (out != null) {
+				new Thread(() -> {
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					BasicCommands.setUnitAttack(out, unit, atk);
+					BasicCommands.setUnitHealth(out, unit, hp);
+				}).start();
+			}
 
 			// track summoned unit (for occupied checks, later attacks, etc.)
 			gameState.summonedUnits.add(unit);
@@ -145,9 +152,44 @@ public class TileClicked implements EventProcessor{
 			gameState.selectedUnit = gameState.player2Avatar;
 		}
 
+		if (gameState.selectedUnit == null) {
+			for (Unit u : gameState.summonedUnits) {
+				if (u != null
+						&& u.getPosition() != null
+						&& u.getPosition().getTilex() == tilex
+						&& u.getPosition().getTiley() == tiley) {
+
+					gameState.selectedUnit = u;
+					break;
+				}
+			}
+		}
+
 		if (gameState.selectedUnit != null) {
-			String who = (gameState.selectedUnit == gameState.player1Avatar) ? "Human Avatar" : "AI Avatar";
-			BasicCommands.addPlayer1Notification(out, "Selected Unit: " + who, 2);
+
+			if (gameState.selectedUnit == gameState.player1Avatar) {
+				BasicCommands.addPlayer1Notification(out, "Selected: P1 Avatar", 2);
+
+			} else if (gameState.selectedUnit == gameState.player2Avatar) {
+				BasicCommands.addPlayer1Notification(out, "Selected: P2 Avatar", 2);
+
+			} else {
+				String name = gameState.selectedUnit.getUnitName();
+				if (name == null) {
+					name = "Unit";
+				}
+
+				BasicCommands.addPlayer1Notification(
+						out,
+						"Selected: " + name + " ("
+								+ gameState.selectedUnit.getAttack()
+								+ "/"
+								+ gameState.selectedUnit.getHealth()
+								+ ")",
+						2
+				);
+			}
+
 		} else {
 			BasicCommands.addPlayer1Notification(out, "No unit on this tile", 2);
 		}

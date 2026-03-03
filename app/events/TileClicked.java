@@ -5,8 +5,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import akka.actor.ActorRef;
 import structures.GameState;
 import structures.basic.Tile;
+import structures.basic.Unit;
 import commands.BasicCommands;
 import java.util.List;
+
+import utils.BasicObjectBuilders;
+import utils.StaticConfFiles;
+
+import structures.basic.EffectAnimation;
 
 /**
  * Indicates that the user has clicked an object on the game canvas, in this case a tile.
@@ -22,13 +28,105 @@ import java.util.List;
  * @author Dr. Richard McCreadie
  *
  */
-public class TileClicked implements EventProcessor{
+public class TileClicked implements EventProcessor {
 
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 
 		int tilex = message.get("tilex").asInt();
 		int tiley = message.get("tiley").asInt();
+
+		if (gameState.selectedHandCard != -1) {
+
+			Tile tile = gameState.board.getTile(tilex, tiley);
+
+			var hand = gameState.player1.getCardInHand();
+
+			if (gameState.selectedHandCard >= hand.size()) {
+				gameState.selectedHandCard = -1;
+				return;
+			}
+
+			var card = hand.get(gameState.selectedHandCard);
+
+			if (gameState.player1.getMana() < card.getManacost()) {
+				BasicCommands.addPlayer1Notification(out, "Not enough mana", 2);
+				gameState.selectedHandCard = -1;
+				return;
+			}
+
+			if (!card.isCreature()) {
+				gameState.selectedHandCard = -1;
+				return;
+			}
+
+			// Cannot summon onto an occupied tile
+			if (isTileOccupied(gameState, tilex, tiley)) {
+				BasicCommands.addPlayer1Notification(out, "Tile is occupied", 2);
+				gameState.selectedHandCard = -1;
+				return;
+			}
+
+			// Check if the tile is in the valid move tiles
+
+
+			int newId = gameState.nextUnitId++;
+			Unit unit = BasicObjectBuilders.loadUnit(card.getUnitConfig(), newId, Unit.class);
+			unit.setUnitName(card.getCardname());
+
+			int atk = card.getBigCard().getAttack();
+			int hp  = card.getBigCard().getHealth();
+			unit.setAttack(atk);
+			unit.setHealth(hp);
+
+			// spend mana
+			gameState.player1.setMana(gameState.player1.getMana() - card.getManacost());
+			BasicCommands.setPlayer1Mana(out, gameState.player1);
+
+			EffectAnimation summonFX = BasicObjectBuilders.loadEffect(StaticConfFiles.f1_summon);
+			if (summonFX != null) {
+				BasicCommands.playEffectAnimation(out, summonFX, tile);
+			}
+			if (out != null) {
+				try { Thread.sleep(200); } catch (InterruptedException e) { e.printStackTrace(); }
+			}
+			// place + draw
+			unit.setPositionByTile(tile);
+			BasicCommands.drawUnit(out, unit, tile);
+
+			// update stats (front-end sometimes needs a short delay)
+			BasicCommands.setUnitAttack(out, unit, atk);
+			BasicCommands.setUnitHealth(out, unit, hp);
+			if (out != null) {
+				new Thread(() -> {
+					try {
+						Thread.sleep(50);
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					BasicCommands.setUnitAttack(out, unit, atk);
+					BasicCommands.setUnitHealth(out, unit, hp);
+				}).start();
+			}
+
+			// track summoned unit (for occupied checks, later attacks, etc.)
+			gameState.player1SummonedUnits.add(unit);
+
+			hand.remove(gameState.selectedHandCard);
+
+			// clear slots 1..6
+			for (int slot = 1; slot <= 6; slot++) {
+				BasicCommands.drawCard(out, null, slot, 0);
+			}
+
+			// redraw current hand into slots 1..handSize
+			for (int i = 0; i < hand.size(); i++) {
+				BasicCommands.drawCard(out, hand.get(i), i + 1, 0);
+			}
+
+			gameState.selectedHandCard = -1;
+			return;
+		}
 
 		Tile clickedTile = gameState.board.getTile(tilex, tiley);
 
@@ -85,8 +183,28 @@ public class TileClicked implements EventProcessor{
 		}
 
 		if (gameState.selectedUnit != null) {
-			String label = getUnitTypeLabel(gameState.getUnitType(gameState.selectedUnit));
-			BasicCommands.addPlayer1Notification(out, "Selected Unit: " + label, 2);
+			if (gameState.selectedUnit == gameState.player1Avatar) {
+				BasicCommands.addPlayer1Notification(out, "Selected: P1 Avatar", 2);
+
+			} else if (gameState.selectedUnit == gameState.player2Avatar) {
+				BasicCommands.addPlayer1Notification(out, "Selected: P2 Avatar", 2);
+
+			} else {
+				String name = gameState.selectedUnit.getUnitName();
+				if (name == null) {
+					name = "Unit";
+				}
+
+				BasicCommands.addPlayer1Notification(
+						out,
+						"Selected: " + name + " ("
+								+ gameState.selectedUnit.getAttack()
+								+ "/"
+								+ gameState.selectedUnit.getHealth()
+								+ ")",
+						2
+				);
+			}
 		} else {
 			BasicCommands.addPlayer1Notification(out, "No unit on this Tile", 2);
 		}
@@ -111,17 +229,8 @@ public class TileClicked implements EventProcessor{
 		return false;
 	}
 
-	private String getUnitTypeLabel(GameState.UnitType type) {
-		if (type == null)  {
-            return "Unknown";
-        }
-
-		switch (type) {
-			case HUMAN_AVATAR:    return "Human Player Avatar";
-			case HUMAN_SUMMONED:  return "Human Player Summon Unit";
-			case AI_AVATAR:       return "AI Player Avatar";
-			case AI_SUMMONED:     return "AI Player Summon Unit";
-			default:              return "Unknown";
-		}
+	private boolean isTileOccupied(GameState gs, int x, int y) {
+		return gs.getUnitOnTile(gs.board.getTile(x, y)) != null;
 	}
+	
 }

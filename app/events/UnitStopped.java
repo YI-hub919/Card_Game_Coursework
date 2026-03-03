@@ -24,12 +24,6 @@ public class UnitStopped implements EventProcessor{
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 		
 		int unitid = message.get("id").asInt();
-
-
-		// Decrease moving unit counter
-		gameState.movingUnitsCount = Math.max(0, gameState.movingUnitsCount - 1);
-
-		if (out == null || message == null) return;
 		
 	}
 

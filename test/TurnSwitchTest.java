@@ -24,55 +24,19 @@ public class TurnSwitchTest {
         EndTurnClicked endTurn = new EndTurnClicked();
         endTurn.processEvent(null, gs, msg("endturnclicked"));
 
-        assertTrue(gs.endTurnRequested);
+        assertTrue(gs.isEndTurnRequested());
         assertEquals(GameState.TurnPhase.END_TURN_PENDING, gs.phase);
     }
 
-    @Test
-    public void testMovingCounterIncrementsAndDecrements() {
-        GameState gs = new GameState();
 
-        UnitMoving moving = new UnitMoving();
-        UnitStopped stopped = new UnitStopped();
 
-        assertEquals(0, gs.movingUnitsCount);
-
-        ObjectNode movingMsg = msg("unitMoving");
-        movingMsg.put("id", 1);
-        moving.processEvent(null, gs, movingMsg);
-        assertEquals(1, gs.movingUnitsCount);
-
-        ObjectNode stoppedMsg = msg("unitStopped");
-        stoppedMsg.put("id", 1);
-        stopped.processEvent(null, gs, stoppedMsg);
-        assertEquals(0, gs.movingUnitsCount);
-    }
-
-    @Test
-    public void testHeartbeatDoesNotSwitchIfUnitsMoving() {
-        GameState gs = new GameState();
-
-        gs.isPlayer1Turn = true;
-        gs.endTurnRequested = true;
-        gs.movingUnitsCount = 1;
-
-        int roundsBefore = gs.getRounds();
-
-        Heartbeat hb = new Heartbeat();
-        hb.processEvent(null, gs, msg("heartbeat"));
-
-        assertTrue(gs.isPlayer1Turn);
-        assertTrue(gs.endTurnRequested);
-        assertEquals(roundsBefore, gs.getRounds());
-    }
 
     @Test
     public void testHeartbeatSwitchesTurnWhenReady() {
         GameState gs = new GameState();
 
         gs.isPlayer1Turn = true;
-        gs.endTurnRequested = true;
-        gs.movingUnitsCount = 0;
+        gs.requestEndTurn();
 
         int roundsBefore = gs.getRounds();
 
@@ -80,7 +44,7 @@ public class TurnSwitchTest {
         hb.processEvent(null, gs, msg("heartbeat"));
 
         assertFalse(gs.isPlayer1Turn);
-        assertFalse(gs.endTurnRequested);
+        assertFalse(gs.isEndTurnRequested());
         assertEquals(GameState.TurnPhase.AI_TURN, gs.phase);
         assertTrue(gs.getRounds() >= roundsBefore);
     }
@@ -91,18 +55,15 @@ public class TurnSwitchTest {
         gs.isPlayer1Turn = true;
 
         Heartbeat hb = new Heartbeat();
-
         int roundsStart = gs.getRounds();
 
-        // P1 -> P2
-        gs.endTurnRequested = true;
-        gs.movingUnitsCount = 0;
+        // P1 -> P2 (should NOT increment rounds)
+        gs.requestEndTurn();
         hb.processEvent(null, gs, msg("heartbeat"));
         int roundsAfterP2 = gs.getRounds();
 
-        // P2 -> P1
-        gs.endTurnRequested = true;
-        gs.movingUnitsCount = 0;
+        // P2 -> P1 (should increment rounds by 1)
+        gs.requestEndTurn();
         hb.processEvent(null, gs, msg("heartbeat"));
         int roundsAfterP1 = gs.getRounds();
 

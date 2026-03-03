@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import akka.actor.ActorRef;
 import structures.GameState;
+import commands.BasicCommands;
 
 /**
  * Indicates that the user has clicked an object on the game canvas, in this case
@@ -20,7 +21,15 @@ public class OtherClicked implements EventProcessor{
 
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
-		
+		gameState.selectedHandCard = -1;
+
+		if (gameState.selectedTile != null && out != null) {
+			BasicCommands.drawTile(out, gameState.selectedTile, 0);
+		}
+		gameState.selectedTile = null;
+		gameState.selectedUnit = null;
+
+		if (out != null) BasicCommands.addPlayer1Notification(out, "Cancelled", 1);
 		
 	}
 

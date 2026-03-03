@@ -33,8 +33,6 @@ public class GameState {
 
     public Player player1 = new Player();
     public Player player2 = new Player();
-  
-    public boolean isHumanTurn = true;
 
     public Avatar player1Avatar;
     public Avatar player2Avatar;
@@ -74,9 +72,7 @@ public class GameState {
 
     // Turn control variables
 
-    public boolean endTurnRequested = false;  // End turn button clicked
-
-    public int movingUnitsCount = 0;          // Units currently moving
+    private boolean endTurnRequested = false;  // End turn button clicked
 
     public boolean isPlayer1Turn = true;      // True if it's Player 1's turn
 
@@ -88,7 +84,24 @@ public class GameState {
 
     public TurnPhase phase = TurnPhase.HUMAN_TURN;
 
+    // End turn flag should only be written via these methods
+    public void requestEndTurn() {
+        this.endTurnRequested = true;
+    }
+
+    public void clearEndTurnRequest() {
+        this.endTurnRequested = false;
+    }
+
+    public boolean isEndTurnRequested() {
+        return this.endTurnRequested;
+    }
+
+    public int selectedHandCard = -1; // 0-5, -1 means none selected
+    public int nextUnitId = 10; // id for summoned units
+
     public void updateValidMoveTiles() {
+        
         validMoveTiles.clear();
         if (selectedUnit == null) {
             return;

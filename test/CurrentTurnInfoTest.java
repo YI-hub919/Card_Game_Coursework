@@ -22,7 +22,7 @@ public class CurrentTurnInfoTest {
         EndTurnClicked handler = new EndTurnClicked();
 
         // Start as human's turn
-        gameState.isHumanTurn = true;
+        gameState.isPlayer1Turn = true;
 
         // Ensure players exist
         assertNotNull("player1 should exist", gameState.player1);
@@ -39,8 +39,11 @@ public class CurrentTurnInfoTest {
         // Trigger end turn
         handler.processEvent(null, gameState, message);
 
+        // simulate heartbeat to finalize turn
+        new events.Heartbeat().processEvent(null, gameState, message);
+
         // Turn should switch
-        assertFalse("Turn should switch to opponent", gameState.isHumanTurn);
+        assertFalse("Turn should switch to opponent", gameState.isPlayer1Turn);
 
         // Mana capacity after switching
         int expectedMana = gameState.getManaCapacity();

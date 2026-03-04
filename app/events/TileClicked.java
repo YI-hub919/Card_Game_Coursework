@@ -14,6 +14,11 @@ import utils.StaticConfFiles;
 
 import structures.basic.EffectAnimation;
 
+import utils.BasicObjectBuilders;
+import utils.StaticConfFiles;
+
+import structures.basic.EffectAnimation;
+
 /**
  * Indicates that the user has clicked an object on the game canvas, in this case a tile.
  * The event returns the x (horizontal) and y (vertical) indices of the tile that was
@@ -68,7 +73,6 @@ public class TileClicked implements EventProcessor {
 			}
 
 			// Check if the tile is in the valid move tiles
-
 
 			int newId = gameState.nextUnitId++;
 			Unit unit = BasicObjectBuilders.loadUnit(card.getUnitConfig(), newId, Unit.class);
@@ -232,5 +236,4 @@ public class TileClicked implements EventProcessor {
 	private boolean isTileOccupied(GameState gs, int x, int y) {
 		return gs.getUnitOnTile(gs.board.getTile(x, y)) != null;
 	}
-	
 }

@@ -7,6 +7,7 @@ import structures.GameState;
 import structures.basic.Tile;
 import structures.basic.Unit;
 import commands.BasicCommands;
+import java.util.ArrayList;
 import java.util.List;
 
 import utils.BasicObjectBuilders;
@@ -160,30 +161,44 @@ public class TileClicked implements EventProcessor {
             return;
 		}
 
-		if (gameState.selectedTile != null) {
-			BasicCommands.drawTile(out, gameState.selectedTile, 0);
+		// First, remember which cell to clear (the front-end drawTileQueue uses pop for last-in-first-out, so send "highlight 1" first and then "clear 0").
+		Tile prevSelectedTile = gameState.selectedTile;
+		List<Tile> prevValidMoveTiles = new ArrayList<>();
+		if (gameState.validMoveTiles != null) {
+			prevValidMoveTiles.addAll(gameState.validMoveTiles);
 		}
 
-		clearValidMoveHighlights(out, gameState);
+		gameState.selectedTile = clickedTile;
+		gameState.selectedUnit = gameState.getUnitOnTile(clickedTile);
 		if (gameState.validMoveTiles != null) {
 			gameState.validMoveTiles.clear();
 		}
 
-		BasicCommands.drawTile(out, clickedTile, 1);
-		gameState.selectedTile = clickedTile;
-		gameState.selectedUnit = gameState.getUnitOnTile(clickedTile);
-
+		// First send the new highlight (1), then send the clear (0). The preceding LIFO will perform the clear first and then the highlight; when a unit is lit, that cell will not be highlighted.
+		if (gameState.selectedUnit == null) {
+			BasicCommands.drawTile(out, clickedTile, 1);
+		}
 		if (gameState.selectedUnit != null
 				&& gameState.isSameCamp(gameState.selectedUnit)
 				&& gameState.isPlayer1Turn
 				&& gameState.phase == GameState.TurnPhase.HUMAN_TURN
 				&& gameState.selectedUnit.getNotHasAttacked()
 				&& gameState.selectedUnit.getNotHasMoved()) {
-
 			gameState.updateValidMoveTiles();
 			for (Tile t : gameState.validMoveTiles) {
 				BasicCommands.drawTile(out, t, 1);
 			}
+		}
+		for (Tile t : prevValidMoveTiles) {
+			// Do not clear the selected tile
+			if (t.getTilex() == clickedTile.getTilex() && t.getTiley() == clickedTile.getTiley()) {
+				continue;
+			}
+			BasicCommands.drawTile(out, t, 0);
+		}
+		if (prevSelectedTile != null
+				&& (prevSelectedTile.getTilex() != clickedTile.getTilex() || prevSelectedTile.getTiley() != clickedTile.getTiley())) {
+			BasicCommands.drawTile(out, prevSelectedTile, 0);
 		}
 
 		if (gameState.selectedUnit != null) {

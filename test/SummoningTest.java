@@ -57,9 +57,9 @@ public class SummoningTest {
         assertEquals(0, gs.player1.getCardInHand().size());
 
         // Unit added
-        assertEquals(1, gs.summonedUnits.size());
+        assertEquals(1, gs.player1SummonedUnits.size());
 
-        var u = gs.summonedUnits.get(0);
+        var u = gs.player1SummonedUnits.get(0);
         assertNotNull(u);
         assertNotNull(u.getPosition());
         assertEquals(3, u.getPosition().getTilex());
@@ -94,7 +94,7 @@ public class SummoningTest {
         // First summon at (3,3)
         new TileClicked().processEvent(null, gs, tileMsg(3, 3));
 
-        assertEquals(1, gs.summonedUnits.size());
+        assertEquals(1, gs.player1SummonedUnits.size());
 
         // Prepare second creature card
         Card second = new Card();
@@ -112,7 +112,7 @@ public class SummoningTest {
         new TileClicked().processEvent(null, gs, tileMsg(3, 3));
 
         // Should not create a new unit
-        assertEquals(1, gs.summonedUnits.size());
+        assertEquals(1, gs.player1SummonedUnits.size());
 
         // Card should remain in hand
         assertEquals(1, gs.player1.getCardInHand().size());

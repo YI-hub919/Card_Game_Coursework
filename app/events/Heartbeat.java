@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 import akka.actor.ActorRef;
 import structures.GameState;
+import structures.basic.Tile;
 
 import commands.BasicCommands;
 
@@ -46,6 +47,23 @@ public class Heartbeat implements EventProcessor{
 		gameState.phase = gameState.isPlayer1Turn
 				? GameState.TurnPhase.HUMAN_TURN
 				: GameState.TurnPhase.AI_TURN;
+
+		if (!gameState.isPlayer1Turn) {
+
+			if (gameState.selectedTile != null) {
+				BasicCommands.drawTile(out, gameState.selectedTile, 0);
+				gameState.selectedTile = null;
+			}
+
+			if (gameState.validMoveTiles != null) {
+				for (Tile t : gameState.validMoveTiles) {
+					BasicCommands.drawTile(out, t, 0);
+				}
+				gameState.validMoveTiles.clear();
+			}
+
+			gameState.selectedUnit = null;
+		}
 
 		int manaCap = gameState.getManaCapacity();
 

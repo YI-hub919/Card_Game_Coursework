@@ -2,15 +2,18 @@ package events;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
-
 import akka.actor.ActorRef;
 import structures.GameState;
-
-import commands.BasicCommands;
-
 import structures.basic.Tile;
 import structures.basic.Unit;
-import structures.basic.Position;
+import commands.BasicCommands;
+import java.util.ArrayList;
+import java.util.List;
+
+import utils.BasicObjectBuilders;
+import utils.StaticConfFiles;
+
+import structures.basic.EffectAnimation;
 
 import utils.BasicObjectBuilders;
 import utils.StaticConfFiles;
@@ -31,7 +34,7 @@ import structures.basic.EffectAnimation;
  * @author Dr. Richard McCreadie
  *
  */
-public class TileClicked implements EventProcessor{
+public class TileClicked implements EventProcessor {
 
 	@Override
 	public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
@@ -63,13 +66,14 @@ public class TileClicked implements EventProcessor{
 				return;
 			}
 
-
 			// Cannot summon onto an occupied tile
 			if (isTileOccupied(gameState, tilex, tiley)) {
 				BasicCommands.addPlayer1Notification(out, "Tile is occupied", 2);
 				gameState.selectedHandCard = -1;
 				return;
 			}
+
+			// Check if the tile is in the valid move tiles
 
 			int newId = gameState.nextUnitId++;
 			Unit unit = BasicObjectBuilders.loadUnit(card.getUnitConfig(), newId, Unit.class);
@@ -111,7 +115,7 @@ public class TileClicked implements EventProcessor{
 			}
 
 			// track summoned unit (for occupied checks, later attacks, etc.)
-			gameState.summonedUnits.add(unit);
+			gameState.player1SummonedUnits.add(unit);
 
 			hand.remove(gameState.selectedHandCard);
 
@@ -131,42 +135,73 @@ public class TileClicked implements EventProcessor{
 
 		Tile clickedTile = gameState.board.getTile(tilex, tiley);
 
-		if (gameState.selectedTile != null) {
-			BasicCommands.drawTile(out, gameState.selectedTile, 0);
-		}
+		if (gameState.selectedUnit != null
+                && gameState.isSameCamp(gameState.selectedUnit)
+                && gameState.isPlayer1Turn
+                && gameState.phase == GameState.TurnPhase.HUMAN_TURN
+                && gameState.selectedUnit.getNotHasAttacked()
+                && gameState.selectedUnit.getNotHasMoved()
+                && containsTile(gameState.validMoveTiles, clickedTile)) {
 
-		BasicCommands.drawTile(out, clickedTile, 1);
-		gameState.selectedTile = clickedTile;
-
-		gameState.selectedUnit = null;
-
-		if (gameState.player1Avatar != null
-				&& gameState.player1Avatar.getPosition() != null
-				&& gameState.player1Avatar.getPosition().getTilex() == tilex
-				&& gameState.player1Avatar.getPosition().getTiley() == tiley) {
-			gameState.selectedUnit = gameState.player1Avatar;
-		} else if (gameState.player2Avatar != null
-				&& gameState.player2Avatar.getPosition() != null
-				&& gameState.player2Avatar.getPosition().getTilex() == tilex
-				&& gameState.player2Avatar.getPosition().getTiley() == tiley) {
-			gameState.selectedUnit = gameState.player2Avatar;
-		}
-
-		if (gameState.selectedUnit == null) {
-			for (Unit u : gameState.summonedUnits) {
-				if (u != null
-						&& u.getPosition() != null
-						&& u.getPosition().getTilex() == tilex
-						&& u.getPosition().getTiley() == tiley) {
-
-					gameState.selectedUnit = u;
-					break;
-				}
+			if (gameState.selectedTile != null) {
+				BasicCommands.drawTile(out, gameState.selectedTile, 0);
 			}
+
+			clearValidMoveHighlights(out, gameState);
+			gameState.validMoveTiles.clear();
+
+			BasicCommands.moveUnitToTile(out, gameState.selectedUnit, clickedTile);
+
+			gameState.selectedUnit.setPositionByTile(clickedTile);
+			gameState.selectedUnit.setHasMoved(true);  // one move per unit per turn
+			gameState.selectedTile = clickedTile;
+			gameState.selectedUnit = null;
+			BasicCommands.addPlayer1Notification(out, "Moved", 2);
+
+            return;
+		}
+
+		// First, remember which cell to clear (the front-end drawTileQueue uses pop for last-in-first-out, so send "highlight 1" first and then "clear 0").
+		Tile prevSelectedTile = gameState.selectedTile;
+		List<Tile> prevValidMoveTiles = new ArrayList<>();
+		if (gameState.validMoveTiles != null) {
+			prevValidMoveTiles.addAll(gameState.validMoveTiles);
+		}
+
+		gameState.selectedTile = clickedTile;
+		gameState.selectedUnit = gameState.getUnitOnTile(clickedTile);
+		if (gameState.validMoveTiles != null) {
+			gameState.validMoveTiles.clear();
+		}
+
+		// First send the new highlight (1), then send the clear (0). The preceding LIFO will perform the clear first and then the highlight; when a unit is lit, that cell will not be highlighted.
+		if (gameState.selectedUnit == null) {
+			BasicCommands.drawTile(out, clickedTile, 1);
+		}
+		if (gameState.selectedUnit != null
+				&& gameState.isSameCamp(gameState.selectedUnit)
+				&& gameState.isPlayer1Turn
+				&& gameState.phase == GameState.TurnPhase.HUMAN_TURN
+				&& gameState.selectedUnit.getNotHasAttacked()
+				&& gameState.selectedUnit.getNotHasMoved()) {
+			gameState.updateValidMoveTiles();
+			for (Tile t : gameState.validMoveTiles) {
+				BasicCommands.drawTile(out, t, 1);
+			}
+		}
+		for (Tile t : prevValidMoveTiles) {
+			// Do not clear the selected tile
+			if (t.getTilex() == clickedTile.getTilex() && t.getTiley() == clickedTile.getTiley()) {
+				continue;
+			}
+			BasicCommands.drawTile(out, t, 0);
+		}
+		if (prevSelectedTile != null
+				&& (prevSelectedTile.getTilex() != clickedTile.getTilex() || prevSelectedTile.getTiley() != clickedTile.getTiley())) {
+			BasicCommands.drawTile(out, prevSelectedTile, 0);
 		}
 
 		if (gameState.selectedUnit != null) {
-
 			if (gameState.selectedUnit == gameState.player1Avatar) {
 				BasicCommands.addPlayer1Notification(out, "Selected: P1 Avatar", 2);
 
@@ -189,27 +224,31 @@ public class TileClicked implements EventProcessor{
 						2
 				);
 			}
-
 		} else {
-			BasicCommands.addPlayer1Notification(out, "No unit on this tile", 2);
+			BasicCommands.addPlayer1Notification(out, "No unit on this Tile", 2);
 		}
 	}
 
-	private boolean isTileOccupied(GameState gs, int x, int y) {
-		if (gs.player1Avatar != null && gs.player1Avatar.getPosition() != null
-				&& gs.player1Avatar.getPosition().getTilex() == x
-				&& gs.player1Avatar.getPosition().getTiley() == y) return true;
+	private void clearValidMoveHighlights(ActorRef out, GameState gameState) {
+		if (gameState.validMoveTiles == null) {
+            return;
+        }
+		for (Tile t : gameState.validMoveTiles) {
+			BasicCommands.drawTile(out, t, 0);
+		}
+	}
 
-		if (gs.player2Avatar != null && gs.player2Avatar.getPosition() != null
-				&& gs.player2Avatar.getPosition().getTilex() == x
-				&& gs.player2Avatar.getPosition().getTiley() == y) return true;
-
-		for (Unit u : gs.summonedUnits) {
-			if (u != null && u.getPosition() != null
-					&& u.getPosition().getTilex() == x
-					&& u.getPosition().getTiley() == y) return true;
+	private boolean containsTile(List<Tile> list, Tile tile) {
+		if (list == null || tile == null) return false;
+		for (Tile t: list) {
+			if ((t.getTilex() == tile.getTilex() && t.getTiley() == tile.getTiley())) {
+                return true;
+            }
 		}
 		return false;
 	}
 
+	private boolean isTileOccupied(GameState gs, int x, int y) {
+		return gs.getUnitOnTile(gs.board.getTile(x, y)) != null;
+	}
 }

@@ -2,15 +2,10 @@ package events;
 
 
 import com.fasterxml.jackson.databind.JsonNode;
-
-import akka.actor.ActorRef;
-import structures.GameState;
-
-import com.fasterxml.jackson.databind.JsonNode;
-
 import akka.actor.ActorRef;
 import commands.BasicCommands;
 import structures.GameState;
+import structures.basic.Tile;
 
 /**
  * Indicates that the user has clicked an object on the game canvas, in this case a card.
@@ -53,6 +48,21 @@ public class CardClicked implements EventProcessor{
 			if (out != null) BasicCommands.addPlayer1Notification(out, "Card unselected", 2);
 			return;
 		}
+
+		// Remove the highlight of some units
+		if (out != null) {
+			if (gameState.selectedTile != null) {
+				BasicCommands.drawTile(out, gameState.selectedTile, 0);
+			}
+			if (gameState.validMoveTiles != null) {
+				for (Tile t : gameState.validMoveTiles) {
+					BasicCommands.drawTile(out, t, 0);
+				}
+				gameState.validMoveTiles.clear();
+			}
+		}
+		gameState.selectedTile = null;
+		gameState.selectedUnit = null;
 
 		gameState.selectedHandCard = idx;
 		if (out != null) BasicCommands.addPlayer1Notification(out, "Card selected", 2);

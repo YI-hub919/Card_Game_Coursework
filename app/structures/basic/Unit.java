@@ -38,6 +38,9 @@ public class Unit {
 	Position position;
 	UnitAnimationSet animations;
 	ImageCorrection correction;
+    
+	private boolean hasAttacked = false;
+	private boolean hasMoved = false;
 	
 	public Unit() {}
 	
@@ -107,7 +110,7 @@ public class Unit {
 	}
 	public void setAttack(int attack){
 		if (this.associatedPlayer != null) {
-		this.associatedPlayer.setAttack(attack); // 同步到玩家对象
+		this.associatedPlayer.setAttack(attack); 
 	} else {
 		this.attack = attack;
 	}}
@@ -119,7 +122,7 @@ public class Unit {
 	}
 	public void setRobustness(int robustness) {
 			if (this.associatedPlayer != null) {
-				this.associatedPlayer.setRobustness(robustness); // 同步到玩家对象
+				this.associatedPlayer.setRobustness(robustness);
 			} else {
 		this.robustness = robustness;
 	}}
@@ -172,6 +175,20 @@ public class Unit {
 		position = new Position(tile.getXpos(),tile.getYpos(),tile.getTilex(),tile.getTiley());
 	}
 
-	public boolean canAttack = false;
+	public boolean getNotHasAttacked() {
+        return !hasAttacked;
+	}
+
+	public void setHasAttacked(boolean hasAttacked) {
+		this.hasAttacked = hasAttacked;
+	}
+
+	public boolean getNotHasMoved() {
+		return !hasMoved;
+	}
+
+	public void setHasMoved(boolean hasMoved) {
+		this.hasMoved = hasMoved;
+	}
 	
 }

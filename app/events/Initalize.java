@@ -6,9 +6,9 @@ import akka.actor.ActorRef;
 import commands.BasicCommands;
 import structures.Board;
 import structures.GameState;
+import structures.basic.Avatar;
 import structures.basic.Player;
 import structures.basic.Tile;
-import structures.basic.Unit;
 import utils.BasicObjectBuilders;
 import utils.OrderedCardLoader;
 import utils.StaticConfFiles;
@@ -29,7 +29,7 @@ public class Initalize implements EventProcessor {
     @Override
     public void processEvent(ActorRef out, GameState gameState, JsonNode message) {
 
-        gameState.gameInitalised = true;
+        gameState.gameInitialised = true;
         gameState.something = true;
 
         // Create and store the game board (9x5 grid) using Board (dev style)
@@ -56,9 +56,8 @@ public class Initalize implements EventProcessor {
         gameState.player1AvatarTile = tile1;
         gameState.player2AvatarTile = tile2;
 
-        // Load avatar units
-        Unit humanAvatar = BasicObjectBuilders.loadUnit(StaticConfFiles.humanAvatar, 0, Unit.class);
-        Unit aiAvatar = BasicObjectBuilders.loadUnit(StaticConfFiles.aiAvatar, 1, Unit.class);
+        Avatar humanAvatar = (Avatar) BasicObjectBuilders.loadUnit(StaticConfFiles.humanAvatar, 0, Avatar.class);
+        Avatar aiAvatar = (Avatar) BasicObjectBuilders.loadUnit(StaticConfFiles.aiAvatar, 1, Avatar.class);
 
         gameState.player1Avatar = humanAvatar;
         gameState.player2Avatar = aiAvatar;
@@ -96,7 +95,6 @@ public class Initalize implements EventProcessor {
         Player humanPlayer = new Player(20, 0);
         Player aiPlayer = new Player(20, 0);
 
-
         gameState.player1 = humanPlayer;
         gameState.player2 = aiPlayer;
 
@@ -108,37 +106,21 @@ public class Initalize implements EventProcessor {
         BasicCommands.setPlayer1Mana(out, gameState.player1);
         BasicCommands.setPlayer2Mana(out, gameState.player2);
 
-        // Round 1 setup
-        gameState.nextRounds();
-        int roundNum = gameState.getRounds();
-        int roundMana = gameState.getManaCapacity();
+        // Game start state
+        gameState.isPlayer1Turn = true;
+        gameState.phase = GameState.TurnPhase.HUMAN_TURN;
 
-        BasicCommands.addPlayer1Notification(out, String.format("Human Player Round %d", roundNum), 2);
-        humanPlayer.setMana(roundMana);
+        gameState.nextRounds();
+        int mana = gameState.getManaCapacity();
+
+        humanPlayer.setMana(mana);
         BasicCommands.setPlayer1Mana(out, gameState.player1);
 
-        // Human Draw 3 starting cards
+        BasicCommands.addPlayer1Notification(out, "Your Turn", 2);
+
+        // Human draws 3 starting cards
         for (int i = 0; i < 3; i++) {
             Player.drawCard(out, humanPlayer, true);
         }
-
-        try { Thread.sleep(5000); } catch (InterruptedException e) { e.printStackTrace(); }
-        humanPlayer.setMana(0);
-        BasicCommands.setPlayer1Mana(out, gameState.player1);
-        try { Thread.sleep(2000); } catch (InterruptedException e) { e.printStackTrace(); }
-
-        BasicCommands.addPlayer2Notification(out, String.format("AI Player Round %d", roundNum), 2);
-        aiPlayer.setMana(roundMana);
-        BasicCommands.setPlayer2Mana(out, gameState.player2);
-
-        // Human Draw 3 starting cards
-        for (int i = 0; i < 3; i++) {
-            Player.drawCard(out, humanPlayer, false);
-        }
-
-        try { Thread.sleep(2500); } catch (InterruptedException e) { e.printStackTrace(); }
-        aiPlayer.setMana(0);
-        BasicCommands.setPlayer2Mana(out, gameState.player2);
-        try { Thread.sleep(2000); } catch (InterruptedException e) { e.printStackTrace(); }
     }
 }
